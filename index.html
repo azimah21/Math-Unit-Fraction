@@ -66,67 +66,7 @@
           Example: 1/3 + 1/6 = 1/2, because (3 + 6) / (3 × 6) = 9/18 = 1/2.
         </p>
       </section>
-// --- Adaptive state ---
-const adaptive = {
-  enabled: true, // set false to disable quickly
-  level: 1, // 1 = easy, 2 = medium, 3 = hard
-  correctStreak: 0,
-  total: 0,
-  correct: 0,
-};
 
-// Choose denominators by level (tune ranges for your class)
-function pickDenominator(level) {
-  if (level === 1) return randFrom([2, 3, 4, 5, 6]);
-  if (level === 2) return randFrom([7, 8, 9, 10, 12]);
-  return randFrom([15, 16, 18, 20, 24]); // harder
-}
-
-function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-// Call this to create the next question
-function generateQuestion() {
-  const level = adaptive.enabled ? adaptive.level : 1;
-  const d1 = pickDenominator(level);
-  const d2 = pickDenominator(level);
-  // Ensure two unit fractions; you can enforce d1 ≠ d2 if needed
-  return { f1: {n:1,d:d1}, f2: {n:1,d:d2} };
-}
-
-// Call this after the user submits an answer
-function gradeAndAdvance(isCorrect) {
-  adaptive.total++;
-  if (isCorrect) {
-    adaptive.correct++;
-    adaptive.correctStreak++;
-    // Level up when on a roll
-    if (adaptive.enabled && adaptive.correctStreak >= 3 && adaptive.level < 3) {
-      adaptive.level++;
-      adaptive.correctStreak = 0;
-    }
-  } else {
-    adaptive.correctStreak = 0;
-    // If struggling, ease up
-    if (adaptive.enabled && adaptive.level > 1) adaptive.level--;
-  }
-  // generate next question
-  const nextQ = generateQuestion();
-  renderQuestion(nextQ);
-}
-
-// (Example) attach to your existing submit/check handler:
-// const isCorrect = checkAnswer(userAnswer);
-// gradeAndAdvance(isCorrect);
-
-<label>
-  <input type="checkbox" id="adaptiveToggle" checked>
-  Adaptive mode
-</label>
-
-document.getElementById('adaptiveToggle').addEventListener('change', (e)=>{
-  adaptive.enabled = e.target.checked;
-});
-    
     
     </main>
 
@@ -134,3 +74,4 @@ document.getElementById('adaptiveToggle').addEventListener('change', (e)=>{
   </body>
 
   </html>
+
