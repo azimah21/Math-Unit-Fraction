@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,315 +6,600 @@
 <title>Unit Fraction Builder</title>
 <style>
   :root{
-    --bg:#f6f8fb;
-    --card:#ffffff;
-    --ink:#1f2937;
-    --muted:#475569;
-    --brand:#2563eb;
-    --brand-2:#60a5fa;
-    --ok:#16a34a;
-    --bad:#dc2626;
-    --chip:#e6eefc;
-    --shadow:0 6px 22px rgba(31,41,55,.08);
-    --radius:16px;
+    --bg:#f6f8fb; --card:#ffffff; --ink:#0f172a; --muted:#475569;
+    --brand:#2563eb; --brand-weak:#dbeafe; --ok:#16a34a; --bad:#dc2626;
+    --ring:#cbd5e1;
   }
-  html,body{height:100%}
-  body{
-    margin:0; font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
-    color:var(--ink); background:var(--bg); line-height:1.45;
-  }
-  .wrap{max-width:820px; margin:24px auto 64px; padding:0 16px}
-  header{margin-bottom:8px}
-  h1{font-size:clamp(26px,4vw,36px); margin:0 0 6px}
-  .tagline{color:var(--muted); margin:0 0 18px; font-size:clamp(14px,2.5vw,16.5px)}
-  .stats{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px}
-  .pill{background:var(--card); box-shadow:var(--shadow); border-radius:999px; padding:10px 14px; font-weight:600}
-  .card{background:var(--card); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); margin:14px 0}
-  h2{font-size:18px; margin:0 0 10px}
-  .targetBar{
-    display:flex; align-items:center; gap:10px;
-  }
-  .segments{
-    flex:1 1 auto;
-    display:grid;
-    grid-auto-flow:column;
-    grid-auto-columns:minmax(16px,1fr);
-    gap:6px;
-    min-height:18px;
-    overflow:visible; /* <- prevents “third bar cut off” on small screens */
-  }
-  .seg{
-    background:#e9edf7; border-radius:8px; height:18px; position:relative;
-  }
-  .seg.fill{ background:linear-gradient(180deg, var(--brand), var(--brand-2)); }
-  .selection{
-    display:flex; gap:8px; flex-wrap:wrap; min-height:38px;
-  }
-  .chip{
-    background:var(--chip); border:2px solid var(--brand-2);
-    border-radius:999px; padding:6px 10px; font-weight:700;
-  }
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(74px,1fr));
-    gap:12px; margin-top:6px;
-  }
-  button{
-    appearance:none; border:0; border-radius:12px; padding:12px;
-    font-weight:700; cursor:pointer; transition:transform .02s ease, box-shadow .2s ease;
-  }
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;}
+  main{max-width:760px;margin:28px auto;padding:0 16px;}
+  h1{font-size:32px;margin:0 0 6px;}
+  .sub{color:var(--muted);margin:0 0 18px;}
+  .meta{display:flex;gap:24px;flex-wrap:wrap;margin:8px 0 16px;color:var(--muted)}
+  .card{background:var(--card);border-radius:14px;box-shadow:0 8px 24px rgba(15,23,42,.06);padding:16px 16px;}
+  .card + .card{margin-top:12px;}
+  .card-title{margin:0 0 8px;font-weight:700}
+  .row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media (min-width:560px){.row{grid-template-columns:repeat(4,1fr)}}
   .btn{
-    background:#eef2ff; box-shadow:var(--shadow);
+    display:inline-flex;align-items:center;justify-content:center;width:100%;
+    min-height:48px;border-radius:12px;border:1px solid var(--ring);
+    background:#fff;color:var(--ink);font-weight:600;cursor:pointer;user-select:none;
   }
-  .btn:hover{transform:translateY(-1px)}
-  .btn.selected{outline:3px solid var(--brand); background:#e6f0ff}
-  .btn-prim{background:var(--brand); color:#fff}
-  .btn-ghost{background:#eef2f7}
-  .rowButtons{display:flex; gap:12px; flex-wrap:wrap; margin-top:12px}
-  .note{color:var(--muted)}
-  .feedback{font-weight:700; margin-top:10px}
-  .good{color:var(--ok)} .bad{color:var(--bad)}
-  /* small screens padding fix */
-  @media (max-width:380px){ .rowButtons{flex-direction:column} }
-  /* tiny inline svg */
-  .tiny-illustration{display:flex; align-items:center; gap:12px; color:var(--muted)}
-  .tiny-illustration svg{width:46px; height:46px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.choice.selected{outline:3px solid var(--brand);background:var(--brand-weak)}
+  .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .btn.ghost{background:#fff}
+  .pill{display:inline-block;padding:.25rem .55rem;border-radius:999px;background:var(--brand-weak);color:var(--brand);font-weight:700}
+  .help{color:var(--muted)}
+  .note{font-size:14px;color:var(--muted)}
+  .feedback{margin-top:10px;font-weight:700}
+  .feedback.ok{color:var(--ok)} .feedback.bad{color:var(--bad)}
+  .kbd{display:inline-block;border:1px solid var(--ring);border-bottom-width:2px;padding:.1rem .35rem;border-radius:6px;background:#fff}
+  .divider{height:1px;background:#e2e8f0;margin:12px 0}
+  /* fraction bar in coach */
+  #fracBar{height:18px;border:1px solid #cbd5e1;border-radius:6px;display:flex;overflow:hidden;background:#fff}
+  #coach .text-muted{color:var(--muted)}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Unit Fraction Builder</h1>
-    <p class="tagline">Pick two unit fractions <strong>1/a</strong> and <strong>1/b</strong> that make the target <strong>1/n</strong>. Short wins level you up. Stuck? We’ll ease it.</p>
-    <div class="stats">
-      <div class="pill" id="qStat">Question 1/10</div>
-      <div class="pill" id="sStat">Score: 0</div>
-      <div class="pill" id="tStat">Target: 1/—</div>
-    </div>
-  </header>
+<main>
+  <h1>Unit Fraction Builder</h1>
+  <p class="sub">Pick two unit fractions <em>1/a</em> and <em>1/b</em> whose sum equals the target <em>1/n</em>.</p>
+
+  <div class="meta">
+    <div><span class="pill" id="qMeta">Question 1/10</span></div>
+    <div>Score: <strong id="score">0</strong></div>
+    <div>Target: <strong id="targetLabel">1/?</strong></div>
+  </div>
 
   <section class="card">
-    <h2>Target</h2>
-    <div class="targetBar">
-      <div class="segments" id="segBar" aria-hidden="true"></div>
-      <div style="min-width:58px;text-align:right" id="targetText">1/—</div>
-    </div>
+    <h3 class="card-title">Target</h3>
+    <div id="targetText" class="help">Make 1/? using two unit fractions.</div>
   </section>
 
   <section class="card">
-    <h2>Your Selection</h2>
-    <div class="selection" id="selection"></div>
-    <div class="note">Pick <strong>exactly two</strong> denominators below.</div>
+    <h3 class="card-title">Your Selection</h3>
+    <div id="selectionText" class="help">Pick exactly two denominators below.</div>
   </section>
 
   <section class="card">
-    <h2>Pick exactly two denominators</h2>
-    <div class="grid" id="choices"></div>
-    <div class="rowButtons">
-      <button class="btn-prim" id="checkBtn" disabled>Check Answer</button>
-      <button class="btn-ghost" id="resetBtn">Reset Selection</button>
-      <button class="btn" id="nextBtn" disabled>Next ▶</button>
+    <h3 class="card-title">Pick exactly two denominators</h3>
+    <div id="choices" class="row" style="margin:10px 0 12px;"></div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button id="checkBtn" class="btn primary" disabled>Check Answer</button>
+      <button id="resetBtn" class="btn ghost">Reset Selection</button>
+      <button id="nextBtn" class="btn ghost" disabled>Next ▸</button>
     </div>
+
     <div id="feedback" class="feedback"></div>
+    <div class="note" style="margin-top:6px;">Tip: If your sum is <b>too big</b>, your denominators were <b>too small</b>. If your sum is <b>too small</b>, your denominators were <b>too big</b>.</div>
+  </section>
+
+  <!-- Coach Panel -->
+  <section id="coach" class="card" style="margin-top:12px;">
+    <h3 class="card-title">Think Aloud</h3>
+    <div id="coachPrompt" class="note"></div>
+
+    <!-- Visual for the first chosen denominator -->
+    <div id="firstPickViz" style="margin-top:12px; display:none;">
+      <div class="note" style="margin-bottom:6px;">Your first pick as a unit fraction:</div>
+      <div id="barLabel" class="note" style="margin-bottom:4px;"></div>
+      <div id="fracBar"></div>
+      <div class="text-muted" style="margin-top:6px;font-size:13px;">
+        (One part is shaded to show <span id="oneOverA">1/a</span>.)
+      </div>
+    </div>
   </section>
 
   <section class="card">
-    <h2>How it works</h2>
-    <div class="tiny-illustration">
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="46" fill="#e9edf7" />
-        <path d="M50 50 L50 4 A46 46 0 1 1 4 50 Z" fill="#60a5fa"/>
-      </svg>
-      <p>We want <strong>1/a + 1/b = 1/n</strong>. This is true when <strong>n(a+b) = ab</strong>. For each question we pick a target <em>n</em>, create a correct pair <em>(a,b)</em>, mix in close distractors, and ask you to spot the right two.</p>
-    </div>
-    <p class="note">Difficulty adapts to you: a short correct streak moves you up a level; a short struggle nudges you down. You can tune this in the code under <strong>ADAPTIVE SETTINGS</strong>.</p>
+    <h3 class="card-title">How it works</h3>
+    <p>We want <code>1/a + 1/b = 1/n</code>. That’s true exactly when <code>n(a + b) = ab</code>.
+      For each question, the game chooses a target denominator <code>n</code>, generates a valid pair
+      <code>(a,b)</code>, mixes in friendly distractors, and asks you to find the correct pair.</p>
+    <p>Difficulty adapts to you: a short correct streak moves you up a level; a short struggle moves you down.
+      You can tune the ranges in the code section marked <strong>“ADAPTIVE SETTINGS”</strong>.</p>
   </section>
-</div>
+</main>
 
 <script>
-/* ========= ADAPTIVE SETTINGS ========= */
+/* ----------------------- ADAPTIVE SETTINGS ----------------------- */
 const adaptive = {
   enabled: true,
-  level: 1, // 1 (easiest) .. 3 (hardest)
-  upAfter: 3, // correct in a row to level up
-  downAfter: 2 // wrong/struggle in last k to level down
+  level: 1, // 1 (easiest) … 3 (hardest)
+  correctStreak: 0,
+  wrongStreak: 0,
+  // candidate pools per level
+  pools: {
+    1: { n:[4,6,8,10,12], a:[3,4,6,8,10,12,15,20] },
+    2: { n:[5,6,8,9,10,12,15,18,20], a:[4,5,6,8,9,10,12,15,16,18,20,24] },
+    3: { n:[7,8,9,10,12,15,16,18,20,24], a:[5,6,7,8,9,10,12,14,15,16,18,20,24,30,40] }
+  },
+  stepOnCorrect: 2, // move up after this many in a row
+  stepOnWrong: 2 // move down after this many in a row
 };
-/* ranges for n by level */
-const levelRanges = {
-  1: [4, 9], // n between 4..9
-  2: [6, 14],
-  3: [10, 24]
+/* ---------------------------------------------------------------- */
+
+const state = {
+  q: 1, totalQ: 10, score:0,
+  n: null, pair: null, choices: [],
+  picked: []
 };
-/* ============== STATE ============== */
-let qIndex = 0, totalQs = 10, score = 0;
-let current = {}; // {n,a,b,choices}
-let pick = []; // selected denominators
-let streak = 0;
-let recentWrong = 0;
 
-/* ============== HELPERS ============== */
-const el = id => document.getElementById(id);
-const qStat = el('qStat'), sStat = el('sStat'), tStat = el('tStat');
-const segBar = el('segBar'), targetText = el('targetText');
-const selection = el('selection'), choices = el('choices');
-const checkBtn = el('checkBtn'), resetBtn = el('resetBtn'), nextBtn = el('nextBtn');
-const feedback = el('feedback');
+/* ---------- helpers ---------- */
+const $ = sel => document.querySelector(sel);
+function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+function gcd(a,b){ while(b){ [a,b]=[b,a%b] } return a }
+function lcm(a,b){ return a*b/gcd(a,b) }
+function asFrac(x){ return x } // not used but kept for clarity
 
-function randint(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
-
-/* Pick n by level, then generate a valid (a,b) using divisors of n^2:
-   If d | n^2 then (a,b) = (n + d, n + n^2/d) works and gives integers. */
-function generatePairByN(n){
-  const nsq = n*n;
-  const divisors = [];
-  for(let d=1; d*d<=nsq; d++){
-    if(nsq % d === 0){ divisors.push(d); if(d*d!==nsq) divisors.push(nsq/d); }
+/* find a valid pair (a,b) s.t. 1/a + 1/b = 1/n */
+function makePair(n, poolA){
+  // Try random a from pool; compute b = an/(a-n); integer check
+  for(let tries=0; tries<200; tries++){
+    const a = randFrom(poolA);
+    if (a<=n) continue;
+    const num = a*n;
+    const den = a-n;
+    if (num % den !== 0) continue;
+    const b = num/den;
+    if (b===a || b<=n) continue;
+    return [a,b];
   }
-  // avoid silly tiny/huge gaps; prefer mid divisors
-  const sorted = divisors.sort((x,y)=>Math.abs(x-n)-Math.abs(y-n));
-  for(const d of sorted){
-    const a = n + d, b = n + (nsq/d);
-    if(Number.isInteger(a) && Number.isInteger(b) && a>1 && b>1) {
-      return [a,b];
-    }
-  }
-  // fallback (shouldn't happen)
+  // fallback simple friendly pair: (n+1, n*(n+1))
   return [n+1, n*(n+1)];
 }
 
-function rangeForLevel(){
-  const [lo,hi] = levelRanges[adaptive.level];
-  return randint(lo,hi);
+/* build distractors (friendly but wrong) */
+function buildChoices(n, trueA, trueB, poolA){
+  const set = new Set([trueA,trueB]);
+  const out = [trueA,trueB];
+  while(out.length<8){
+    const a = randFrom(poolA);
+    if (a<=n || set.has(a)) continue;
+    // try to avoid accidentally valid partner with n
+    out.push(a); set.add(a);
+  }
+  // shuffle
+  for(let i=out.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [out[i],out[j]]=[out[j],out[i]] }
+  return out;
 }
 
-function makeDistractors(n, a, b){
-  const set = new Set([a,b]);
-  const arr=[];
-  while(arr.length<6){
-    // near misses + randoms
-    const r = Math.random();
-    let d;
-    if(r < .5){
-      d = randint(Math.max(3, n-3), n+24);
-    } else {
-      d = randint(3, 40);
+/* ----- COACH (think-aloud) ----- */
+const coach = (() => {
+  const starterTemplate = n => (`
+    <ol style="margin-left:18px;">
+      <li>If the target is <b>1/${n}</b>, what does it look like? Imagine a bar cut into ${n} equal parts — how many parts are shaded?</li>
+      <li><b>1/${n} is small.</b> Should our denominators be <b>bigger or smaller than ${n}</b> if we add two unit fractions to make 1/${n}? Why?</li>
+      <li>Look at the numbers on the buttons. <b>Which ones feel ‘friendly’ with ${n}</b> (like multiples of 2 or factors with ${n})? Why might that help?</li>
+    </ol>
+    <div style="margin-top:8px;">When you're ready: <b>Pick one denominator you think might work. Why that one?</b></div>
+  `);
+
+  function setPrompt(html){ $("#coachPrompt").innerHTML = html; }
+
+  function showFractionBar(a) {
+    const viz = $("#firstPickViz");
+    const bar = $("#fracBar");
+    const label = $("#barLabel");
+    const oneOverA = $("#oneOverA");
+    bar.innerHTML = "";
+    label.textContent = `1/${a} (bar split into ${a} equal parts)`;
+    oneOverA.textContent = `1/${a}`;
+    for (let i=1;i<=a;i++){
+      const seg = document.createElement("div");
+      seg.style.flex="1";
+      seg.style.borderRight = i<a ? "1px solid #e5e7eb" : "none";
+      seg.style.background = i===1 ? "rgba(37,99,235,.25)" : "white";
+      bar.appendChild(seg);
     }
-    if(!set.has(d)){ set.add(d); arr.push(d); }
+    viz.style.display = "block";
   }
-  return arr;
-}
 
-function drawSegments(n){
-  segBar.innerHTML = '';
-  const maxSeg = Math.min(n, 20); // keep UX tidy
-  for(let i=1;i<=maxSeg;i++){
-    const s = document.createElement('div');
-    s.className = 'seg' + (i===1 ? ' fill' : '');
-    segBar.appendChild(s);
-  }
-  targetText.textContent = `1/${n}`;
-  tStat.textContent = `Target: 1/${n}`;
-}
-
-function renderChoices(list){
-  choices.innerHTML = '';
-  list.forEach(val=>{
-    const btn = document.createElement('button');
-    btn.className = 'btn';
-    btn.textContent = val;
-    btn.addEventListener('click', ()=>{
-      // toggle
-      if(pick.includes(val)){
-        pick = pick.filter(x=>x!==val);
-        btn.classList.remove('selected');
-      } else {
-        if(pick.length<2){ pick.push(val); btn.classList.add('selected'); }
+  return {
+    start(n){ setPrompt(starterTemplate(n)); $("#firstPickViz").style.display = "none"; },
+    onFirstPick(a){ 
+      showFractionBar(a);
+      setPrompt(`<div>Nice first pick. <b>Why that one?</b></div>
+                 <div style="margin-top:6px;">How would you figure out the other denominator? Try same-family numbers first (e.g., another multiple/factor that plays well with your first pick), or jump bigger?</div>`);
+    },
+    onCheck({n, sumTooBig, sumTooSmall, correct}){
+      if(correct){
+        setPrompt(`<div>Great! <b>What pattern</b> did you notice about denominators that worked?</div>
+                   <div style="margin-top:6px;">How could you <b>guess faster</b> next time using that pattern?</div>`);
+        return;
       }
-      updateSelection();
+      if(sumTooBig){
+        setPrompt(`<div>Our sum is <b>bigger</b> than 1/${n}.</div>
+                   <div style="margin-top:6px;">So next time, should our denominators be <b>bigger</b> numbers or <b>smaller</b> numbers?</div>
+                   <div style="margin-top:6px;"><b>Which number will you change first, and why?</b></div>`);
+      }else if(sumTooSmall){
+        setPrompt(`<div>Our sum is <b>smaller</b> than 1/${n}.</div>
+                   <div style="margin-top:6px;">So next time, should our denominators be <b>bigger</b> numbers or <b>smaller</b> numbers?</div>
+                   <div style="margin-top:6px;"><b>Which number will you change first, and why?</b></div>`);
+      }else{
+        setPrompt(`<div>If your sum is <b>too big</b>, denominators were <b>too small</b>. If the sum is <b>too small</b>, denominators were <b>too big</b>.</div>
+                   <div style="margin-top:6px;">Is our sum bigger or smaller than 1/${n}?</div>
+                   <div style="margin-top:6px;">What will you change next?</div>`);
+      }
+    }
+  }
+})();
+
+/* ---------- game flow ---------- */
+function updateMeta(){
+  $("#qMeta").textContent = `Question ${state.q}/${state.totalQ}`;
+  $("#score").textContent = state.score;
+  $("#targetLabel").textContent = `1/${state.n}`;
+  $("#targetText").textContent = `Make 1/${state.n} using two unit fractions.`;
+}
+
+function renderChoices(){
+  const box = $("#choices"); box.innerHTML = "";
+  state.choices.forEach(v=>{
+    const b = document.createElement("button");
+    b.className = "btn choice";
+    b.textContent = v;
+    b.addEventListener("click", ()=>{
+      // toggle selection with max 2
+      const idx = state.picked.indexOf(v);
+      if(idx>=0){ state.picked.splice(idx,1); b.classList.remove("selected"); }
+      else if(state.picked.length<2){ state.picked.push(v); b.classList.add("selected"); if(state.picked.length===1){ coach.onFirstPick(v); } }
+      $("#selectionText").textContent = state.picked.length? `You picked: ${state.picked.join(" and ")}` : "Pick exactly two denominators below.";
+      $("#checkBtn").disabled = state.picked.length!==2;
+      $("#nextBtn").disabled = true;
+      $("#feedback").textContent = "";
+      $("#feedback").className = "feedback";
     });
-    choices.appendChild(btn);
+    box.appendChild(b);
   });
 }
 
-function updateSelection(){
-  selection.innerHTML = '';
-  pick.forEach(v=>{
-    const c = document.createElement('span');
-    c.className = 'chip';
-    c.textContent = `1/${v}`;
-    selection.appendChild(c);
-  });
-  checkBtn.disabled = (pick.length!==2);
-  nextBtn.disabled = true;
+function adjustLevel(correct){
+  if(!adaptive.enabled) return;
+  if(correct){ adaptive.correctStreak++; adaptive.wrongStreak=0; }
+  else { adaptive.wrongStreak++; adaptive.correctStreak=0; }
+  if(adaptive.correctStreak>=adaptive.stepOnCorrect && adaptive.level<3){ adaptive.level++; adaptive.correctStreak=0; }
+  if(adaptive.wrongStreak>=adaptive.stepOnWrong && adaptive.level>1){ adaptive.level--; adaptive.wrongStreak=0; }
 }
 
 function newQuestion(){
-  qIndex++;
-  qStat.textContent = `Question ${Math.min(qIndex,totalQs)}/${totalQs}`;
-  feedback.textContent = '';
-  feedback.className = 'feedback';
-
-  const n = rangeForLevel();
-  const [a,b] = generatePairByN(n);
-
-  const opts = shuffle([a,b, ...makeDistractors(n,a,b)]).slice(0,8);
-  current = { n, a, b, choices: opts };
-
-  drawSegments(n);
-  renderChoices(opts);
-  pick = [];
-  updateSelection();
+  const pool = adaptive.pools[adaptive.level];
+  state.n = randFrom(pool.n);
+  const [a,b] = makePair(state.n, pool.a);
+  state.pair = [a,b];
+  state.choices = buildChoices(state.n, a, b, pool.a);
+  state.picked = [];
+  updateMeta();
+  renderChoices();
+  $("#selectionText").textContent = "Pick exactly two denominators below.";
+  $("#checkBtn").disabled = true;
+  $("#nextBtn").disabled = true;
+  $("#feedback").textContent = "";
+  $("#feedback").className = "feedback";
+  coach.start(state.n);
 }
 
-function checkAnswer(){
-  const ok = (pick.length===2) &&
-             ((pick[0]===current.a && pick[1]===current.b) ||
-              (pick[0]===current.b && pick[1]===current.a));
-  if(ok){
-    score++; sStat.textContent = `Score: ${score}`;
-    feedback.textContent = `Nice! 1/${current.a} + 1/${current.b} = 1/${current.n}.`;
-    feedback.classList.add('good'); feedback.classList.remove('bad');
-    streak++; recentWrong = 0;
+function check(){
+  const [a,b] = state.picked;
+  const target = 1/state.n;
+  const sum = 1/a + 1/b;
+  const eps = 1e-10;
+  const correct = Math.abs(sum - target) < eps;
+  const sumTooBig = sum > target + eps;
+  const sumTooSmall = sum < target - eps;
+
+  if(correct){
+    $("#feedback").textContent = `Correct! A pair for 1/${state.n} is 1/${state.pair[0]} + 1/${state.pair[1]}.`;
+    $("#feedback").className = "feedback ok";
+    state.score++;
   }else{
-    feedback.textContent = `Not quite. A correct pair for 1/${current.n} is 1/${current.a} + 1/${current.b}.`;
-    feedback.classList.add('bad'); feedback.classList.remove('good');
-    streak = 0; recentWrong++;
+    $("#feedback").textContent = `Not quite. For 1/${state.n}, one correct pair is 1/${state.pair[0]} + 1/${state.pair[1]}.`;
+    $("#feedback").className = "feedback bad";
   }
-  // adaptive move
-  if(adaptive.enabled){
-    if(streak >= adaptive.upAfter && adaptive.level < 3){ adaptive.level++; streak=0; }
-    if(recentWrong >= adaptive.downAfter && adaptive.level > 1){ adaptive.level--; recentWrong=0; }
-  }
-  // enable next
-  nextBtn.disabled = false;
-  checkBtn.disabled = true;
+  coach.onCheck({n:state.n, sumTooBig, sumTooSmall, correct});
+  adjustLevel(correct);
+  $("#nextBtn").disabled = false;
 }
 
-function resetSelection(){
-  pick = [];
-  document.querySelectorAll('.btn.selected').forEach(b=>b.classList.remove('selected'));
-  updateSelection();
+function nextQ(){
+  if(state.q < state.totalQ){ state.q++; newQuestion(); }
+  else {
+    $("#choices").innerHTML = "";
+    $("#checkBtn").disabled = true;
+    $("#nextBtn").disabled = true;
+    $("#selectionText").textContent = "Great effort!";
+    $("#feedback").textContent = `You finished ${state.totalQ} questions. Score: ${state.score}.`;
+    $("#feedback").className = "feedback ok";
+  }
 }
 
-checkBtn.addEventListener('click', checkAnswer);
-resetBtn.addEventListener('click', resetSelection);
-nextBtn.addEventListener('click', ()=>{
-  if(qIndex < totalQs){ newQuestion(); }
-  else{
-    feedback.textContent = `Great work! Final score: ${score}/${totalQs}. Tap Reset to play again.`;
-    feedback.classList.remove('bad'); feedback.classList.add('good');
-  }
-  nextBtn.disabled = true;
-});
+/* ---------- wire up ---------- */
+$("#checkBtn").addEventListener("click", check);
+$("#nextBtn").addEventListener("click", nextQ);
+$("#resetBtn").addEventListener("click", ()=>{ state.picked=[]; document.querySelectorAll(".btn.choice").forEach(b=>b.classList.remove("selected")); $("#selectionText").textContent="Pick exactly two denominators below."; $("#checkBtn").disabled=true; $("#nextBtn").disabled=true; $("#feedback").textContent=""; $("#feedback").className="feedback"; $("#firstPickViz").style.display="none"; });
 
+/* boot */
 newQuestion();
 </script>
 </body>
 </html>
 
+Sent from Outlook for Android
+From: Azimah Ghazali <azimahghazali@hotmail.com>
+Sent: Sunday, November 9, 2025 6:54:53 AM
+To: Azimah Ghazali <azimahghazali@hotmail.com>
+Subject: Re: Adaptive Thinking Code 1
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Unit Fraction Builder</title>
+<style>
+  :root{
+    --bg:#0f172a; /* slate-900 */
+    --panel:#111827; /* gray-900 */
+    --muted:#93a3b8; /* slate-400 */
+    --text:#e5e7eb; /* gray-200 */
+    --accent:#60a5fa; /* blue-400 */
+    --accent-2:#34d399; /* emerald-400 */
+    --danger:#f87171; /* red-400 */
+    --card:#0b1220;
+    --btn:#1f2937;
+    --btn-active:#374151;
+    --ring:#1d4ed8;
+  }
+  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  html,body{margin:0;background:var(--bg);color:var(--text)}
+  .wrap{max-width:820px;margin:0 auto;padding:20px}
+  h1{margin:12px 0 4px 0;text-align:center;font-weight:800;font-size:32px}
+  p.sub{margin:0 0 18px 0;text-align:center;color:var(--muted)}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .bar{display:flex;justify-content:space-between;align-items:center;
+       background:var(--panel);border-radius:12px;padding:14px 16px;margin:10px 0}
+  .card{background:var(--card);border:1px solid #1b2437;border-radius:16px;padding:18px;margin:14px 0}
+  .title{font-weight:700;margin:0 0 10px 0}
+  .muted{color:var(--muted)}
+  .progress{height:12px;background:#0a1222;border-radius:999px;overflow:hidden;border:1px solid #1b2437}
+  .progress > span{display:block;height:100%;background:var(--accent);width:0%}
+  .btn{
+    background:var(--btn);border:1px solid #1f2a44;color:var(--text);
+    padding:12px 14px;border-radius:12px;font-weight:600;cursor:pointer;
+    transition:transform .04s ease, background .15s ease, border .15s ease
+  }
+  .btn:hover{background:var(--btn-active)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--accent);border-color:#2a63d8;color:#061021}
+  .btn.ghost{background:transparent;border-color:#24304d}
+  .grid{
+    display:grid;gap:12px;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  .chip{
+    text-align:center;padding:16px 10px;border-radius:14px;border:1px solid #23304d;
+    background:#101a30;cursor:pointer;font-weight:700
+  }
+  .chip.selected{outline:3px solid var(--ring);background:#0e1a34}
+  .chip.locked{opacity:.45;pointer-events:none}
+  .feedback{font-weight:700;margin-top:8px}
+  .good{color:var(--accent-2)}
+  .bad{color:var(--danger)}
+  @media (max-width:560px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  code{background:#0f1a33;border:1px solid #1c2742;padding:1px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Unit Fraction Builder</h1>
+    <p class="sub">Pick two unit fractions <em>1/a</em> and <em>1/b</em> whose sum equals the target <em>1/n</em>.</p>
 
+    <!-- top status bar -->
+    <div class="bar">
+      <div><strong>Question:</strong> <span id="qnum">1</span>/10</div>
+      <div><strong>Score:</strong> <span id="score">0</span></div>
+      <div><strong>Target:</strong> <span id="targetLabel">1/6</span></div>
+    </div>
+    <div class="progress" aria-label="progress"><span id="progressFill"></span></div>
+
+    <!-- target & selection -->
+    <div class="card">
+      <div class="title">Target</div>
+      <div id="targetPretty" class="muted">1/6</div>
+    </div>
+
+    <div class="card">
+      <div class="title">Your Selection</div>
+      <div id="selection" class="muted">Pick exactly two denominators below.</div>
+    </div>
+
+    <!-- candidates -->
+    <div class="card">
+      <div class="title">Pick exactly two denominators</div>
+      <div id="grid" class="grid" role="group" aria-label="denominator choices"></div>
+      <div class="row" style="margin-top:14px">
+        <button id="checkBtn" class="btn primary">Check Answer</button>
+        <button id="resetBtn" class="btn">Reset Selection</button>
+        <button id="nextBtn" class="btn ghost" title="Skip to next">Next ▸</button>
+      </div>
+      <div id="feedback" class="feedback muted"></div>
+    </div>
+
+    <!-- how it works -->
+    <div class="card">
+      <div class="title">How it works</div>
+      <p class="muted">
+        We want <code>1/a + 1/b = 1/n</code>. That’s true exactly when
+        <code>n(a + b) = ab</code>. For each question the game chooses a target
+        denominator <code>n</code> and generates a valid pair <code>(a,b)</code>, mixes in
+        good distractors, and asks you to find the correct pair.
+      </p>
+      <p class="muted">
+        Difficulty adapts to you: a short correct streak moves you up a level; a
+        short struggle moves you down. You can tune the ranges in the code section
+        marked <strong>“ADAPTIVE SETTINGS”</strong>.
+      </p>
+    </div>
+  </div>
+
+<script>
+/* ======================== ADAPTIVE SETTINGS ======================== */
+/* Level → pool of target n, and denominator ranges for candidates. */
+const LEVELS = {
+  1: { targets:[4,5,6,7,8,9], pool:[4,5,6,7,8,9,10,12], gridCount:8 },
+  2: { targets:[6,7,8,9,10,12,14], pool:[5,6,7,8,9,10,11,12,14,15,16,18], gridCount:10 },
+  3: { targets:[8,9,10,12,14,15,18,20,24], pool:[6,7,8,9,10,11,12,13,14,15,16,18,20,21,24], gridCount:12 }
+};
+/* How fast to move levels */
+const STREAK_UP = 3; // three in a row → level up
+const STREAK_DOWN = 3; // three misses → level down
+
+/* ============================ STATE =============================== */
+let questionNum = 0, totalQuestions = 10, score = 0;
+let level = 1, winStreak = 0, loseStreak = 0;
+let targetN = 6, correctPair = [3,6]; // a,b that solve 1/a + 1/b = 1/n
+let picked = []; // current user choices
+let locked = false;
+
+/* ============================ UTILS =============================== */
+const byId = id => document.getElementById(id);
+const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+const gcd = (a,b)=>b?gcd(b,a%b):a;
+
+/* Given n, create a valid (a,b) using the factor-pair trick:
+   If (x*y = n^2), then a = n + n^2/x and b = n + x is a solution. */
+function makeValidPair(n){
+  const factors = [];
+  for(let x=1; x*x<=n*n; x++){
+    if((n*n)%x===0){ factors.push(x); if(x!==(n*n)/x) factors.push((n*n)/x); }
+  }
+  const x = factors[Math.floor(Math.random()*factors.length)];
+  const a = n + Math.floor((n*n)/x);
+  const b = n + x;
+  return [a,b];
+}
+
+/* Build a candidate grid that contains the correct pair plus distractors. */
+function buildCandidates(n, pair, gridCount){
+  const pool = new Set(LEVELS[level].pool);
+  pool.add(pair[0]); pool.add(pair[1]); // ensure present
+  // add distractors that *almost* work or are plausible
+  const near = [n-1,n+1,2*n-1,2*n,3*n-1,3*n].filter(v=>v>2);
+  near.forEach(v=>pool.add(v));
+  const list = Array.from(pool);
+  const shuffled = shuffle(list).slice(0, gridCount-2);
+  shuffled.push(pair[0], pair[1]);
+  return shuffle(shuffled);
+}
+
+/* Check whether 1/a + 1/b == 1/n using integer math */
+function isCorrectPair(a,b,n){
+  return n*(a+b) === a*b;
+}
+
+/* ============================ RENDER ============================== */
+function render(){
+  byId('qnum').textContent = questionNum;
+  byId('score').textContent = score;
+  byId('targetLabel').textContent = `1/${targetN}`;
+  byId('targetPretty').textContent = `Make 1/${targetN} using two unit fractions.`;
+  byId('selection').textContent = picked.length ? picked.map(d=>`1/${d}`).join(' + ') : 'Pick exactly two denominators below.';
+  byId('feedback').textContent = '';
+  byId('feedback').className = 'feedback muted';
+  byId('progressFill').style.width = `${(questionNum-1)/totalQuestions*100}%`;
+
+  const grid = byId('grid');
+  grid.innerHTML = '';
+  const candidates = buildCandidates(targetN, correctPair, LEVELS[level].gridCount);
+  candidates.forEach(val=>{
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.textContent = val;
+    btn.addEventListener('click', ()=>{
+      if(locked) return;
+      const i = picked.indexOf(val);
+      if(i>-1){ picked.splice(i,1); btn.classList.remove('selected'); }
+      else{
+        if(picked.length===2){ return; }
+        picked.push(val);
+        btn.classList.add('selected');
+      }
+      byId('selection').textContent = picked.length ? picked.map(d=>`1/${d}`).join(' + ') : 'Pick exactly two denominators below.';
+    });
+    grid.appendChild(btn);
+  });
+
+  // button states
+  byId('checkBtn').disabled = false;
+  byId('nextBtn').disabled = true;
+  locked = false;
+}
+
+/* ========================= GAME FLOW ============================= */
+function newQuestion(){
+  if(questionNum>=totalQuestions){
+    // finished set
+    byId('progressFill').style.width = '100%';
+    byId('feedback').className = 'feedback good';
+    byId('feedback').textContent = `Great work! Final score: ${score}/${totalQuestions}.`;
+    byId('grid').querySelectorAll('.chip').forEach(b=>b.classList.add('locked'));
+    byId('checkBtn').disabled = true;
+    byId('nextBtn').disabled = true;
+    return;
+  }
+  questionNum++;
+  // pick a target and make a valid pair for this level
+  const targets = LEVELS[level].targets;
+  targetN = targets[Math.floor(Math.random()*targets.length)];
+  correctPair = makeValidPair(targetN);
+  picked = [];
+  render();
+}
+
+function grade(){
+  if(picked.length!==2) {
+    byId('feedback').className='feedback bad';
+    byId('feedback').textContent='Pick exactly two denominators.';
+    return;
+  }
+  const [a,b] = picked;
+  const ok = isCorrectPair(a,b,targetN);
+  locked = true;
+  byId('grid').querySelectorAll('.chip').forEach(btn=>{
+    btn.classList.add('locked');
+    const val = Number(btn.textContent);
+    // tiny visual cue: outline correct ones
+    if((val===correctPair[0]||val===correctPair[1])) btn.style.outline='3px solid var(--accent-2)';
+  });
+
+  if(ok){
+    score++;
+    winStreak++; loseStreak=0;
+    byId('feedback').className='feedback good';
+    byId('feedback').textContent='Nice! That makes the target exactly.';
+    if(winStreak>=STREAK_UP && level<3){ level++; winStreak=0; }
+  }else{
+    loseStreak++; winStreak=0;
+    byId('feedback').className='feedback bad';
+    byId('feedback').innerHTML = `Not quite. A correct pair for 1/${targetN} is <strong>1/${correctPair[0]} + 1/${correctPair[1]}</strong>.`;
+    if(loseStreak>=STREAK_DOWN && level>1){ level--; loseStreak=0; }
+  }
+
+  byId('checkBtn').disabled = true;
+  byId('nextBtn').disabled = false;
+}
+
+/* Buttons */
+byId('checkBtn').addEventListener('click', grade);
+byId('resetBtn').addEventListener('click', ()=>{ if(!locked){ picked=[]; render(); }});
+byId('nextBtn').addEventListener('click', newQuestion);
+
+/* Kick off */
+newQuestion();
+</script>
+</body>
+</html>
 
 
 
