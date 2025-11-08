@@ -89,21 +89,58 @@
     </div>
 
     <!-- how it works -->
-    <div class="card">
-      <div class="title">How it works</div>
-      <p class="muted">
-        We want <code>1/a + 1/b = 1/n</code>. That’s true exactly when
-        <code>n(a + b) = ab</code>. For each question the game chooses a target
-        denominator <code>n</code> and generates a valid pair <code>(a,b)</code>, mixes in
-        good distractors, and asks you to find the correct pair.
-      </p>
-      <p class="muted">
-        Difficulty adapts to you: a short correct streak moves you up a level; a
-        short struggle moves you down. You can tune the ranges in the code section
-        marked <strong>“ADAPTIVE SETTINGS”</strong>.
-      </p>
+   <div class="card">
+  <h3>How it works</h3>
+  <p>
+    You are building a target <b>unit fraction</b> like <b>1/4</b> using two other unit fractions.
+    Pick exactly <b>two denominators</b> so that <b>1/a + 1/b = 1/n</b>.
+  </p>
+
+  <div class="illu">
+    <!-- simple, kid-friendly static example -->
+    <div>
+      <p><b>Example:</b> Make <b>1/2</b> using two unit fractions.</p>
+      <p class="small">A correct pair is <b>1/3 + 1/6</b>.</p>
     </div>
+
+    <!-- little SVG bars to “see” the idea -->
+    <svg viewBox="0 0 320 120" role="img" aria-label="Fraction bars showing 1/3 and 1/6 make 1/2">
+      <!-- target 1/2 -->
+      <g transform="translate(0,0)">
+        <text x="0" y="14" font-size="14" fill="#102a43">Target 1/2</text>
+        <rect x="0" y="22" width="300" height="18" fill="#e5e7eb" rx="6"/>
+        <rect x="0" y="22" width="150" height="18" fill="#93c5fd" rx="6"/>
+      </g>
+      <!-- 1/3 -->
+      <g transform="translate(0,46)">
+        <text x="0" y="14" font-size="14" fill="#102a43">1/3</text>
+        <rect x="0" y="22" width="300" height="18" fill="#e5e7eb" rx="6"/>
+        <rect x="0" y="22" width="100" height="18" fill="#bfdbfe" rx="6"/>
+        <!-- tick marks -->
+        <line x1="100" y1="22" x2="100" y2="40" stroke="#93a3b8"/>
+        <line x1="200" y1="22" x2="200" y2="40" stroke="#93a3b8"/>
+      </g>
+      <!-- 1/6 -->
+      <g transform="translate(0,92)">
+        <text x="0" y="14" font-size="14" fill="#102a43">1/6</text>
+        <rect x="0" y="22" width="300" height="18" fill="#e5e7eb" rx="6"/>
+        <rect x="0" y="22" width="50" height="18" fill="#dbeafe" rx="6"/>
+        <!-- tick marks -->
+        <line x1="50" y1="22" x2="50" y2="40" stroke="#93a3b8"/>
+        <line x1="100" y1="22" x2="100" y2="40" stroke="#93a3b8"/>
+        <line x1="150" y1="22" x2="150" y2="40" stroke="#93a3b8"/>
+        <line x1="200" y1="22" x2="200" y2="40" stroke="#93a3b8"/>
+        <line x1="250" y1="22" x2="250" y2="40" stroke="#93a3b8"/>
+      </g>
+    </svg>
   </div>
+
+  <p class="small">
+    Tip: If you’re stuck, look for a pair where the denominators are factors of the target’s
+    denominator multiplied together. For 1/2 → try 3 and 6.
+  </p>
+</div>
+
 
 <script>
 /* ======================== ADAPTIVE SETTINGS ======================== */
@@ -262,6 +299,7 @@ newQuestion();
 </script>
 </body>
 </html>
+
 
 
 
