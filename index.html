@@ -2,431 +2,467 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Unit Fraction Builder</title>
 <style>
   :root{
-    --bg:#f7f9fc; --card:#ffffff; --ink:#0f172a; --muted:#475569;
-    --ring:#94a3b8; --primary:#2563eb; --primary-weak:#dbeafe;
-    --ok:#16a34a; --warn:#dc2626; --soft:#e2e8f0;
-    --chip:#eef2ff; --chip-ink:#3730a3;
+    --bg:#f7f9fc;
+    --card:#ffffff;
+    --ink:#1f2937;
+    --muted:#6b7280;
+    --brand:#2563eb;
+    --brand-weak:#e8f0fe;
+    --ok:#16a34a;
+    --no:#dc2626;
+    --ring: rgba(37,99,235,.25);
+    --bar:#e5e7eb;
+    --shade:#93c5fd;
+    --chip:#eef2ff;
+    --chip-ink:#3730a3;
   }
-  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,Segoe UI,Roboto,Arial;}
-  .wrap{max-width:1080px;margin:24px auto;padding:0 16px;}
-  h1{font-size:clamp(24px,4vw,40px);margin:0 0 6px;}
-  .subtitle{color:var(--muted);margin:0 0 18px;}
-  .row{display:grid;grid-template-columns:1fr 360px;gap:16px}
-  .card{background:var(--card);border:1px solid var(--soft);border-radius:14px;box-shadow:0 2px 8px rgba(15,23,42,.04)}
-  .card .pad{padding:16px 18px}
-  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
-  .pill{background:var(--chip);color:var(--chip-ink);padding:6px 10px;border-radius:999px;font-weight:600;font-size:14px}
-  .title{font-weight:800;font-size:20px;margin:0 0 10px}
-  .muted{color:var(--muted)}
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  button.denom{padding:12px 6px;border-radius:12px;border:1px solid var(--soft);background:#fff;font-weight:700;cursor:pointer}
-  button.denom[aria-pressed="true"]{outline:3px solid var(--primary);background:var(--primary-weak)}
-  .actions{display:flex;gap:12px;align-items:center;margin-top:12px}
-  .btn{border:1px solid var(--ring);background:#fff;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer}
-  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .eq{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f8fafc;border:1px solid var(--soft);border-radius:10px;padding:10px 12px;margin:8px 0 6px;white-space:nowrap;overflow:auto}
-  .barWrap{margin-top:8px}
-  .barLabel{font-weight:700;margin:6px 0 4px}
-  .bar{height:16px;border-radius:8px;border:1px solid var(--soft);display:flex;overflow:hidden;background:#fff}
-  .seg{flex:1;border-right:1px solid var(--soft)}
-  .seg:last-child{border-right:none}
-  .shade{background:rgba(37,99,235,.35)}
-  .coach h3{margin:0 0 8px}
-  .ok{color:var(--ok);font-weight:800}
-  .bad{color:var(--warn);font-weight:800}
-  .note{font-size:13px;color:var(--muted);margin-top:6px}
-  .compare h3{margin:0 0 6px}
-  .attempts{font-size:14px;color:var(--muted)}
-  @media (max-width:900px){ .row{grid-template-columns:1fr;} }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background:var(--bg); color:var(--ink);
+  }
+  .wrap{max-width:1040px; margin:24px auto; padding:0 16px;}
+  h1{font-size:40px; margin:0 0 4px 0}
+  .lede{color:var(--muted); margin-bottom:18px}
+  .row{display:grid; grid-template-columns: 1fr 340px; gap:16px}
+  @media (max-width:1000px){ .row{grid-template-columns: 1fr} }
+
+  .card{
+    background:var(--card); border-radius:16px; padding:16px 18px; box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  }
+  .card + .card{margin-top:12px}
+  .title{font-weight:700; font-size:18px; margin-bottom:10px}
+  .pillrow{display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 14px}
+  .pill{
+    background:var(--chip); color:var(--chip-ink); border-radius:999px; padding:6px 10px; font-size:13px; font-weight:700;
+  }
+
+  .grid{
+    display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:1px solid #e5e7eb; border-radius:14px; padding:12px 14px; background:#fff; font-weight:700; cursor:pointer;
+    transition: box-shadow .15s, border-color .15s, transform .02s;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .btn:hover{ box-shadow: 0 0 0 3px var(--ring); border-color: var(--brand-weak); }
+  .btn.primary{ background:var(--brand); color:white; border-color:var(--brand); }
+  .btn.gray{ background:#f3f4f6; }
+  .btn:disabled{opacity:.55; cursor:not-allowed; box-shadow:none}
+
+  .denom{height:54px; font-size:18px}
+  .denom.selected{outline:3px solid var(--brand); outline-offset:2px}
+
+  .eq{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px; padding:14px; font-size:18px; text-align:center;
+  }
+  .muted{color:var(--muted); font-size:14px}
+
+  .bar{
+    height:16px; border:1px solid var(--bar); border-radius:8px; display:flex; overflow:hidden; background:white;
+  }
+  .segment{flex:1; border-right:1px solid var(--bar)}
+  .segment:last-child{border-right:none}
+  .segment.shade{ background:var(--shade); }
+
+  .coach h3{margin:0 0 8px 0; font-size:22px}
+  .coach .muted{font-size:13px}
+
+  .compare h3{margin:0 0 8px 0; font-size:20px}
+  .cmpRow{display:grid; grid-template-columns: 1fr; gap:10px}
+  .cmpLine .label{font-weight:700; margin-bottom:6px}
+  .cmpLine .small{color:var(--muted); font-size:13px; margin-top:6px}
+
+  .result{margin-top:8px; font-weight:800}
+  .ok{color:var(--ok)} .no{color:var(--no)}
+
+  .stats{display:flex; gap:12px; flex-wrap:wrap}
+  .stats .pill{background:#ecfeff; color:#0e7490}
+
+  .footer-note{color:var(--muted); font-size:12px; margin-top:8px}
 </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Unit Fraction Builder</h1>
-    <p class="subtitle">Let’s make this fraction: <b id="headTarget">1/?</b>. Pick two unit fractions <b>1/a</b> and <b>1/b</b> whose sum equals the target.</p>
+    <div class="lede">Let’s make this fraction: <b id="ledeTarget">1/?</b>. Pick two unit fractions <b>1/a</b> and <b>1/b</b> whose sum equals the target.</div>
 
-    <div class="meta">
-      <div class="pill">Question <span id="qNum">1</span>/10</div>
-      <div class="pill">Score <span id="score">0</span></div>
-      <div class="pill">Target <span id="targetMeta">1/?</span></div>
-      <div class="pill attempts">Attempts: <span id="att">0</span>/5</div>
+    <div class="pillrow">
+      <span class="pill">Question <span id="qNum">1</span>/10</span>
+      <span class="pill">Score <span id="score">0</span></span>
+      <span class="pill">Target <span id="pillTarget">1/?</span></span>
+      <span class="pill">Attempts <span id="attemptsPill">0</span>/5</span>
+      <span class="pill">Wrong <span id="wrongsPill">0</span></span>
     </div>
 
     <div class="row">
-      <!-- LEFT: Game -->
-      <div class="card">
-        <div class="pad">
+      <!-- LEFT: main game -->
+      <div>
+        <div class="card">
           <div class="title">Target</div>
-          <p class="muted" id="targetCopy">Make <b>1/?</b> using two unit fractions.</p>
+          <div class="muted">Make <b id="targetText">1/?</b> using two unit fractions.</div>
 
-          <!-- Live equation -->
-          <div class="eq" id="eq">1/? = 1/_ + 1/_</div>
-          <div class="note">Pick two denominators below. The equation will update.</div>
-
-          <!-- Stacked visuals -->
-          <div class="barGroup">
-            <div class="barWrap">
-              <div class="barLabel">Visual of the <u>target</u></div>
-              <div class="bar" id="barTarget"></div>
-              <div class="note" id="barTargetNote"></div>
-            </div>
-            <div class="barWrap">
-              <div class="barLabel">Visual of your <u>1st pick</u></div>
-              <div class="bar" id="barA"></div>
-              <div class="note" id="barANote"></div>
-            </div>
-            <div class="barWrap">
-              <div class="barLabel">Visual of your <u>2nd pick</u></div>
-              <div class="bar" id="barB"></div>
-              <div class="note" id="barBNote"></div>
-            </div>
+          <!-- live equation -->
+          <div class="card" style="margin-top:12px">
+            <div class="eq" id="equation">1/? = 1/– + 1/–</div>
+            <div class="muted" style="margin-top:8px">Pick two denominators below. The equation will update.</div>
           </div>
 
-          <!-- Denominator choices -->
-          <div class="title" style="margin-top:16px;">Pick exactly two denominators</div>
-          <div class="grid" id="choices"></div>
+          <!-- stacked visuals -->
+          <div class="card" style="margin-top:12px">
+            <div class="title" style="margin-bottom:12px">Visuals</div>
 
-          <div class="actions">
-            <button class="btn primary" id="checkBtn">Check Answer</button>
-            <button class="btn" id="resetBtn">Reset Selection</button>
-            <button class="btn" id="nextBtn" disabled>Next ▸</button>
-            <span class="attempts">You must try this question at least 5 times.</span>
+            <div class="muted">Target (1/<span id="vizTargetN">?</span>)</div>
+            <div id="barTarget" class="bar" style="margin:6px 0 12px"></div>
+            <div class="muted" id="barTargetNote"></div>
+
+            <div class="muted" style="margin-top:14px">Your 1st pick (1/<span id="vizA">–</span>)</div>
+            <div id="barA" class="bar" style="margin:6px 0 12px"></div>
+            <div class="muted" id="barANote"></div>
+
+            <div class="muted" style="margin-top:14px">Your 2nd pick (1/<span id="vizB">–</span>)</div>
+            <div id="barB" class="bar" style="margin:6px 0 12px"></div>
+            <div class="muted" id="barBNote"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="title">Pick exactly two denominators</div>
+          <div id="denomGrid" class="grid" style="margin-top:8px"></div>
+
+          <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap">
+            <button id="checkBtn" class="btn primary">Check Answer</button>
+            <button id="resetBtn" class="btn gray">Reset Selection</button>
+            <button id="nextBtn" class="btn" disabled>Next ▸</button>
+          </div>
+          <div class="muted" id="hint" style="margin-top:10px">Pick two denominators, then press <b>Check</b>.</div>
+
+          <div class="card compare" style="margin-top:14px">
+            <h3>Compare: Your sum vs Target</h3>
+            <div class="muted">We shade pieces using a common split so both bars can be compared fairly.</div>
+            <div class="cmpRow" style="margin-top:10px">
+              <div class="cmpLine">
+                <div class="label">Your sum (1/a + 1/b)</div>
+                <div id="barSum" class="bar"></div>
+                <div class="small" id="barSumNote"></div>
+              </div>
+              <div class="cmpLine" style="margin-top:10px">
+                <div class="label">Target (1/n)</div>
+                <div id="barCompareTarget" class="bar"></div>
+                <div class="small" id="barCompareNote"></div>
+              </div>
+            </div>
+            <div id="cmpResult" class="result"></div>
           </div>
 
-          <!-- Compare panel -->
-          <div class="card" style="margin-top:16px">
-            <div class="pad compare">
-              <h3>Compare: <b>Your sum</b> vs <b>Target</b></h3>
-              <p class="muted">We use a common split so both bars can be compared fairly.</p>
-              <div class="barWrap">
-                <div class="barLabel">Your sum <span id="sumLabel">(1/a + 1/b)</span> <span id="sumIcon"></span></div>
-                <div class="bar" id="barSum"></div>
-                <div class="note" id="sumNote"></div>
-              </div>
-              <div class="barWrap" style="margin-top:10px">
-                <div class="barLabel">Target <span id="tgtLabel">(1/n)</span></div>
-                <div class="bar" id="barTgtCmp"></div>
-                <div class="note" id="tgtNote"></div>
-              </div>
-              <div class="note" id="resultMsg"></div>
+          <div class="card" style="margin-top:14px">
+            <div class="title">Progress</div>
+            <div class="stats">
+              <span class="pill">Attempts: <span id="attemptsTxt">0</span>/5</span>
+              <span class="pill">Wrong tries: <span id="wrongsTxt">0</span></span>
             </div>
+            <div class="muted footer-note" id="progressNote"></div>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT: Coach -->
+      <!-- RIGHT: Think-Aloud Coach -->
       <div class="card coach">
-        <div class="pad">
-          <h3>Think-Aloud Coach</h3>
-          <div id="coachText" class="muted">
-            Let’s start! Is the target a small amount or a big amount? Will our denominators be bigger or smaller?
-          </div>
+        <h3>Think-Aloud Coach</h3>
+        <div id="coachPrompt" class="muted">
+          Let’s get started. First, look at the target. Is it a small or big piece?
+          Try one number you think could work. Why that one?
         </div>
-      </div>
-    </div>
 
-    <div class="card" style="margin-top:16px">
-      <div class="pad">
-        <div class="title">How it works</div>
-        <p>We want <b>1/a + 1/b = 1/n</b>. That’s true exactly when <b>n(a+b) = ab</b>. Each round the game chooses a target denominator <b>n</b>, makes sure there’s a valid pair <b>(a,b)</b> within 1–20, mixes in good distractors, and asks you to find the correct pair.</p>
-        <p class="muted">Difficulty adapts to you: quick success makes it harder; a few struggles keep it similar; more struggles make it easier.</p>
+        <div class="card" style="margin-top:12px">
+          <div class="title" style="margin-bottom:6px">Visuals of your picks</div>
+          <div class="muted" id="coachA">You haven’t picked your first number yet.</div>
+          <div id="coachBarA" class="bar" style="margin:6px 0 10px"></div>
+          <div class="muted" id="coachB">Pick your second number when ready.</div>
+          <div id="coachBarB" class="bar" style="margin:6px 0 0"></div>
+        </div>
       </div>
     </div>
   </div>
 
 <script>
-(() => {
-  // ---------- helpers ----------
-  const el = id => document.getElementById(id);
-  const rand = (arr)=>arr[Math.floor(Math.random()*arr.length)];
-  const range = (a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
-  const gcd=(a,b)=>b?gcd(b,a%b):a;
-  const lcm=(a,b)=>a/gcd(a,b)*b;
+/* ---------- helpers ---------- */
+const $ = sel => document.querySelector(sel);
+function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+const clamp = (x,a,b)=> Math.max(a, Math.min(b,x));
+const gcd = (a,b)=> b?gcd(b,a%b):a;
+const lcm2 = (a,b)=> a*b/gcd(a,b);
+const lcm3 = (a,b,c)=> lcm2(lcm2(a,b),c);
 
-  function buildBar(node, parts, shaded){
-    node.innerHTML="";
-    const maxSeg = 60;
-    let k = 1;
-    if(parts>maxSeg){ k = Math.ceil(parts/maxSeg); }
-    const segs = Math.ceil(parts/k);
-    const shadedSegs = Math.round(shaded/k);
-    for(let i=0;i<segs;i++){
-      const d=document.createElement('div');
-      d.className="seg"+(i<shadedSegs?" shade":"");
-      node.appendChild(d);
-    }
+/* fraction bars */
+function renderBar(el, parts, shaded){
+  clear(el);
+  parts = clamp(parts, 1, 120); // avoid too many DOM nodes
+  shaded = clamp(shaded, 0, parts);
+  for(let i=0;i<parts;i++){
+    const d = document.createElement('div');
+    d.className = 'segment' + (i < shaded ? ' shade' : '');
+    el.appendChild(d);
   }
+}
 
-  function divisors(n){
-    const ds=[];
-    for(let i=1;i*i<=n;i++){
-      if(n%i===0){ ds.push(i); if(i*i!==n) ds.push(n/i); }
-    }
-    return ds.sort((a,b)=>a-b);
-  }
+/* ---------- game state ---------- */
+const state = {
+  q: 1, score: 0,
+  level: 2, // 1 easy, 2 medium, 3 hard
+  targetN: 10,
+  pickA: null, pickB: null,
+  attempts: 0, wrongs: 0, solved: false,
+};
 
-  // Find a,b (<=20) satisfying (a-n)(b-n)=n^2, return first that fits.
-  function findPairWithin20(n){
-    const ds = divisors(n*n);
-    for(const k of ds){
-      const a = n + k;
-      const b = n + (n*n)/k;
-      if(a>=1 && b>=1 && Number.isInteger(b) && a<=20 && b<=20) return [a,b];
-    }
-    return null;
-  }
+/* target range by level (all within 6..20 for nice visuals) */
+function genTarget(level){
+  const rng = {
+    1: [6,10], // easier (bigger pieces)
+    2: [8,14], // medium
+    3: [12,20], // harder (smaller pieces)
+  }[level||2];
+  const n = randFromRange(rng[0], rng[1]);
+  return n;
+}
+function randFromRange(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 
-  // Choose n (difficulty level) that has a valid pair in 1..20
-  function chooseTarget(level){
-    // levels map to different bands of n; we’ll search until we find a valid pair
-    const bands = {
-      1:[10,11,12,14,15,16,18,20],
-      2:[8,9,10,12,14,15,16],
-      3:[6,7,8,9,10,12],
-    };
-    const pool = bands[level] || bands[2];
-    const shuffled = pool.slice().sort(()=>Math.random()-0.5);
-    for(const n of shuffled){
-      const pair = findPairWithin20(n);
-      if(pair) return {n,pair};
-    }
-    // fallback — relax to any n 6..20
-    for(const n of range(6,20)){
-      const pair = findPairWithin20(n);
-      if(pair) return {n,pair};
-    }
-    // absolute fallback
-    return {n:10,pair:[20,20]};
-  }
+/* denominator list 2..20 */
+const DENOMS = Array.from({length:19},(_,i)=>i+2);
 
-  function makeChoices(a,b){
-    const base = new Set([a,b]);
-    // add distractors from 1..20
-    while(base.size<8){
-      base.add(1+Math.floor(Math.random()*20));
-    }
-    return Array.from(base).sort((x,y)=>x-y);
-  }
-
-  // ---------- game state ----------
-  let q=1, score=0, level=2;
-  let n=10, correctA=0, correctB=0;
-  let pickA=null, pickB=null;
-  let attempts=0, wrongAttempts=0, solved=false;
-
-  // ---------- renderers ----------
-  function renderMeta(){
-    el("qNum").textContent=q;
-    el("score").textContent=score;
-    el("targetMeta").textContent=`1/${n}`;
-    el("headTarget").textContent=`1/${n}`;
-    el("targetCopy").innerHTML=`Make <b>1/${n}</b> using two unit fractions.`;
-    el("att").textContent=attempts;
-    el("eq").textContent=`1/${n} = 1/${pickA??"_"} + 1/${pickB??"_"}`;
-    // target bar
-    const T = Math.min(60, n); // render cap
-    buildBar(el("barTarget"), T, Math.ceil(T/n));
-    el("barTargetNote").textContent = `Target 1/${n}. The bar is split into ${n} equal parts; one part is shaded.`;
-    // picks
-    if(pickA){
-      buildBar(el("barA"), Math.min(60,pickA), 1);
-      el("barANote").textContent = `You chose 1/${pickA}. The bar is split into ${pickA} equal parts; one part is shaded.`;
-    } else { el("barA").innerHTML=""; el("barANote").textContent=""; }
-    if(pickB){
-      buildBar(el("barB"), Math.min(60,pickB), 1);
-      el("barBNote").textContent = `You chose 1/${pickB}. The bar is split into ${pickB} equal parts; one part is shaded.`;
-    } else { el("barB").innerHTML=""; el("barBNote").textContent=""; }
-    // compare bars (only when both picks exist)
-    compareBars();
-  }
-
-  function compareBars(){
-    const sumIcon = el("sumIcon");
-    const msg = el("resultMsg");
-    if(!(pickA && pickB)){
-      el("barSum").innerHTML=""; el("sumNote").textContent="";
-      el("barTgtCmp").innerHTML=""; el("tgtNote").textContent="";
-      el("sumLabel").textContent="(1/a + 1/b)";
-      el("tgtLabel").textContent=`(1/${n})`;
-      sumIcon.textContent=""; msg.textContent="";
-      return;
-    }
-    const L = Math.min(120, lcm(lcm(pickA,pickB), n)); // common split
-    const shadedSum = Math.round(L/pickA + L/pickB);
-    const shadedTgt = Math.round(L/n);
-    buildBar(el("barSum"), L, shadedSum);
-    buildBar(el("barTgtCmp"), L, shadedTgt);
-    el("sumLabel").textContent=`(1/${pickA} + 1/${pickB})`;
-    el("tgtLabel").textContent=`(1/${n})`;
-    el("sumNote").textContent=`Common split: ${L}. Your shaded pieces: ${shadedSum}/${L}.`;
-    el("tgtNote").textContent=`Target shaded pieces: ${shadedTgt}/${L}.`;
-
-    const correct = (shadedSum === shadedTgt);
-    if(correct){
-      sumIcon.innerHTML = ` <span class="ok">✅ Awesome! Right on target!</span>`;
-      msg.textContent = "";
-    }else{
-      sumIcon.innerHTML = ` <span class="bad">❌ Oops! Try again, I know you can do it!</span>`;
-      msg.textContent = "";
-    }
-  }
-
-  function renderChoices(list){
-    const box = el("choices"); box.innerHTML="";
-    list.forEach(v=>{
-      const b=document.createElement("button");
-      b.className="denom"; b.textContent=v;
-      b.dataset.value=v;
-      b.addEventListener("click", ()=>{
-        if(b.getAttribute("aria-pressed")==="true"){ // unselect
-          b.setAttribute("aria-pressed","false");
-          if(pickA==v){ pickA=null; }
-          else if(pickB==v){ pickB=null; }
-        }else{
-          // select logic: allow up to 2 picks
-          if(pickA && pickB){ return; }
-          b.setAttribute("aria-pressed","true");
-          if(!pickA) pickA=v; else if(!pickB && v!==pickA) pickB=v;
-          // first-pick coaching visual comes via renderMeta
-          if(pickA && !pickB){
-            coach.onFirstPick(pickA, n);
-          }
-        }
-        renderMeta();
-      });
-      b.setAttribute("aria-pressed","false");
-      box.appendChild(b);
+/* ---------- UI wiring ---------- */
+const denomGrid = $('#denomGrid');
+function drawDenoms(){
+  clear(denomGrid);
+  const pool = shuffle([...DENOMS]).slice(0,8); // 8 buttons per round
+  pool.forEach(val=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn denom';
+    btn.textContent = val;
+    btn.addEventListener('click', ()=>{
+      onPick(val, btn);
     });
-  }
-
-  // ---------- coaching ----------
-  const coach = (()=> {
-    function set(html){ el("coachText").innerHTML = html; }
-    return {
-      start(ntarget){
-        set(`<ol style="margin:0 0 6px 18px">
-          <li>Our target is <b>1/${ntarget}</b>. Is that a small amount or a big amount?</li>
-          <li>Unit fractions get <b>smaller</b> when denominators get <b>bigger</b>.</li>
-          <li>Quick estimate: will both denominators likely be bigger than ${ntarget} or around it?</li>
-        </ol>
-        When you're ready: <b>Pick one denominator you think might work. Why that one?</b>`);
-      },
-      onFirstPick(a, ntarget){
-        set(`<div><b>Nice pick.</b> How will you find the second number?</div>
-        <ul>
-          <li>Try same-family numbers first (near your first pick or linked to the target).</li>
-          <li>If the sum is <b>too big</b>, your numbers were <b>too small</b>. If it’s <b>too small</b>, your numbers were <b>too big</b>.</li>
-        </ul>
-        <div class="note">You chose <b>1/${a}</b>. The bar shows <b>1/a</b> as one shaded piece.</div>`);
-      },
-      onCheck(msgHtml){ set(msgHtml); }
-    }
-  })();
-
-  // ---------- flow ----------
-  function newQuestion(adjust=0){
-    // adjust difficulty
-    level = Math.max(1, Math.min(3, level + adjust));
-    const pick = chooseTarget(level);
-    n = pick.n;
-    [correctA, correctB] = pick.pair.sort((x,y)=>x-y);
-
-    // choices list
-    renderChoices(makeChoices(correctA, correctB));
-
-    // reset state
-    pickA = pickB = null;
-    solved=false; attempts=0; wrongAttempts=0;
-    el("att").textContent=attempts;
-    el("nextBtn").disabled = true;
-    el("sumIcon").textContent=""; el("resultMsg").textContent="";
-    el("score").textContent=score;
-    el("eq").textContent=`1/${n} = 1/_ + 1/_`;
-    el("headTarget").textContent=`1/${n}`;
-    el("targetMeta").textContent=`1/${n}`;
-    el("targetCopy").innerHTML=`Make <b>1/${n}</b> using two unit fractions.`;
-    coach.start(n);
-    renderMeta();
-  }
-
-  el("resetBtn").addEventListener("click", ()=>{
-    // clear selections
-    pickA = pickB = null;
-    document.querySelectorAll("button.denom[aria-pressed='true']").forEach(b=>b.setAttribute("aria-pressed","false"));
-    renderMeta();
+    denomGrid.appendChild(btn);
   });
+}
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
 
-  el("checkBtn").addEventListener("click", ()=>{
-    if(!(pickA && pickB)) {
-      coach.onCheck(`<div>Please pick <b>two</b> denominators first.</div>`);
-      return;
-    }
-    attempts++; el("att").textContent=attempts;
+/* picks */
+function onPick(val, btn){
+  if(state.pickA===null){ state.pickA = val; btn.classList.add('selected'); updatePicks(); coach.onFirstPick(val); return; }
+  if(state.pickB===null && val!==state.pickA){ state.pickB = val; btn.classList.add('selected'); updatePicks(); return; }
+  // toggle logic
+  if(state.pickA===val){ state.pickA=null; btn.classList.remove('selected'); updatePicks(); }
+  else if(state.pickB===val){ state.pickB=null; btn.classList.remove('selected'); updatePicks(); }
+}
 
-    const sum = 1/pickA + 1/pickB;
-    const target = 1/n;
-    const correct = Math.abs(sum - target) < 1e-12;
+/* equation + visuals */
+function updateEquation(){
+  const n = state.targetN;
+  const a = state.pickA ?? '–';
+  const b = state.pickB ?? '–';
+  $('#equation').textContent = `1/${n} = 1/${a} + 1/${b}`;
+}
 
-    if(correct && !solved){
-      solved=true; score++; el("score").textContent=score;
-    }
-    // coach message
-    if(correct){
-      coach.onCheck(`<div class="ok">✅ Our sum equals 1/${n}.</div>
-        <div>What <b>pattern</b> did you notice about denominators that worked? How could you <b>guess faster</b> next time?</div>`);
-    }else if(sum > target){
-      wrongAttempts++;
-      coach.onCheck(`<div class="bad">Our sum is <b>bigger</b> than 1/${n}.</div>
-        <div>Next try: use <b>bigger denominators</b> (that makes each unit fraction smaller).</div>`);
-    }else{
-      wrongAttempts++;
-      coach.onCheck(`<div class="bad">Our sum is <b>smaller</b> than 1/${n}.</div>
-        <div>Next try: use <b>smaller denominators</b> (that makes each unit fraction bigger).</div>`);
-    }
+function updatePicks(){
+  updateEquation();
 
-    // update compare bars & equation
-    compareBars();
-    el("eq").textContent=`1/${n} = 1/${pickA} + 1/${pickB}`;
+  // target bar
+  $('#vizTargetN').textContent = state.targetN;
+  const targSplit = Math.min(60, state.targetN*1); // cap segments
+  renderBar($('#barTarget'), targSplit, Math.max(1, Math.round(targSplit/state.targetN)));
+  $('#barTargetNote').textContent = `Target shaded pieces: ${Math.round(targSplit/state.targetN)}/${targSplit}.`;
 
-    // enable Next only after 5 tries AND at least one correct
-    const allowNext = attempts>=5 && solved;
-    el("nextBtn").disabled = !allowNext;
+  // A
+  $('#vizA').textContent = state.pickA ?? '–';
+  if(state.pickA){
+    const sp = Math.min(60,state.pickA);
+    renderBar($('#barA'), sp, 1);
+    $('#barANote').textContent = `You chose 1/${state.pickA}. The bar is split into ${state.pickA} equal parts; one part is shaded.`;
+    renderBar($('#coachBarA'), sp, 1);
+    $('#coachA').textContent = `You chose 1/${state.pickA}.`;
+  }else{
+    clear($('#barA')); $('#barANote').textContent=''; clear($('#coachBarA')); $('#coachA').textContent='Pick your first number.';
+  }
 
-    // adaptive preview message when they *have* solved it
-    if(solved){
-      const r = wrongAttempts;
-      if(r===0){
-        el("resultMsg").innerHTML = `🎯 <b>You nailed it!</b> Let's give you something more challenging!`;
-      }else if(r===3){
-        el("resultMsg").innerHTML = `👍 <b>You're on track!</b> Keep going!`;
-      }else if(r>3){
-        el("resultMsg").innerHTML = `💪 <b>Hang in there!</b> We'll help you out!`;
+  // B
+  $('#vizB').textContent = state.pickB ?? '–';
+  if(state.pickB){
+    const sp = Math.min(60,state.pickB);
+    renderBar($('#barB'), sp, 1);
+    $('#barBNote').textContent = `You chose 1/${state.pickB}. The bar is split into ${state.pickB} equal parts; one part is shaded.`;
+    renderBar($('#coachBarB'), sp, 1);
+    $('#coachB').textContent = `You also chose 1/${state.pickB}.`;
+  }else{
+    clear($('#barB')); $('#barBNote').textContent=''; clear($('#coachBarB')); $('#coachB').textContent='Pick your second number when ready.';
+  }
+
+  // compare section (only if both picked)
+  drawCompare();
+}
+
+function drawCompare(){
+  const n = state.targetN, a = state.pickA, b = state.pickB;
+  if(!(a && b)){
+    clear($('#barSum')); clear($('#barCompareTarget'));
+    $('#barSumNote').textContent = ''; $('#barCompareNote').textContent = '';
+    $('#cmpResult').textContent = '';
+    return;
+  }
+  const L = Math.min(120, lcm3(n,a,b));
+  const shadedSum = Math.round(L/a) + Math.round(L/b);
+  const shadedTarget = Math.round(L/n);
+  renderBar($('#barSum'), L, shadedSum);
+  renderBar($('#barCompareTarget'), L, shadedTarget);
+  $('#barSumNote').textContent = `Common split: ${L}; your shaded pieces: ${shadedSum}/${L}.`;
+  $('#barCompareNote').textContent = `Target shaded pieces: ${shadedTarget}/${L}.`;
+
+  if(shadedSum === shadedTarget){
+    $('#cmpResult').innerHTML = `<span class="ok">✅ Awesome! Right on target!</span>`;
+  }else if(shadedSum > shadedTarget){
+    $('#cmpResult').innerHTML = `<span class="no">🧐 Oops! Your sum is bigger. Try larger denominators.</span>`;
+  }else{
+    $('#cmpResult').innerHTML = `<span class="no">🧐 Oops! Your sum is smaller. Try smaller denominators? (or re-think the pair)</span>`;
+  }
+}
+
+/* ---------- coach prompts ---------- */
+const coach = (() => {
+  const prompt = $("#coachPrompt");
+  return {
+    start(n){
+      prompt.innerHTML =
+        `Let’s make <b>1/${n}</b>.<br>
+         Is that a small piece or a big piece? Pick one number to try. Why that one?`;
+    },
+    onFirstPick(a){
+      prompt.innerHTML =
+        `Nice pick. How will you find the second number?<br>
+         • Try a number in the same family first (linked to your first pick or to the target).<br>
+         • If the sum is too big, your numbers were too small. If too small, your numbers were too big.`;
+    },
+    onCheck({sumTooBig, sumTooSmall, correct, n}){
+      if(correct){
+        prompt.innerHTML = `Great! Your pair makes <b>1/${n}</b>. What pattern did you notice?`;
+      }else if(sumTooBig){
+        prompt.innerHTML = `Our sum is bigger than <b>1/${n}</b>. Next try: use <b>bigger denominators</b> (each unit gets smaller).`;
+      }else if(sumTooSmall){
+        prompt.innerHTML = `Our sum is smaller than <b>1/${n}</b>. Next try: use <b>smaller denominators</b> (each unit gets bigger).`;
       }else{
-        el("resultMsg").innerHTML = ``;
+        prompt.innerHTML = `Keep reasoning: estimate → choose → compare → adjust.`;
       }
     }
-  });
-
-  el("nextBtn").addEventListener("click", ()=>{
-    // decide adjustment by rule
-    let adjust=0;
-    if(solved){
-      if(wrongAttempts===0) adjust=+1;
-      else if(wrongAttempts===3) adjust=0;
-      else if(wrongAttempts>3) adjust=-1;
-      else adjust=0;
-    }
-    q++; newQuestion(adjust);
-  });
-
-  // kick off
-  newQuestion(0);
+  };
 })();
+
+/* ---------- checking, attempts, adaptivity ---------- */
+function updatePills(){
+  $('#qNum').textContent = state.q;
+  $('#score').textContent = state.score;
+  $('#pillTarget').textContent = `1/${state.targetN}`;
+  $('#ledeTarget').textContent = `1/${state.targetN}`;
+  $('#targetText').textContent = `1/${state.targetN}`;
+  $('#attemptsPill').textContent = state.attempts;
+  $('#wrongsPill').textContent = state.wrongs;
+  $('#attemptsTxt').textContent = state.attempts;
+  $('#wrongsTxt').textContent = state.wrongs;
+}
+
+function checkAnswer(){
+  if(!(state.pickA && state.pickB)) { $('#hint').textContent = 'Pick two denominators first 🙂'; return; }
+
+  const n = state.targetN, a = state.pickA, b = state.pickB;
+  const correct = (a + b) === n ? true : ( (1/a + 1/b) === (1/n) ); // primary rule is n(a+b)=ab; but equality of floats rarely exact
+  // Use integer check
+  const isEqual = (n*(a+b) === a*b);
+
+  state.attempts += 1;
+  const sum = 1/a + 1/b;
+  const sumTooBig = sum > 1/n && !isEqual;
+  const sumTooSmall = sum < 1/n && !isEqual;
+
+  if(isEqual){ state.solved = true; state.score += 1; $('#hint').textContent = '✅ Correct! Try a few more ideas before moving on.'; }
+  else{ state.wrongs += 1; $('#hint').textContent = 'Not yet. Look at the compare bars and adjust your pair.'; }
+
+  // compare bars already drawn; update prompts
+  coach.onCheck({sumTooBig, sumTooSmall, correct: isEqual, n});
+
+  // progress & gate
+  updatePills();
+  $('#progressNote').textContent =
+    state.attempts >= 5
+      ? 'You have tried 5 times. You can now move to the next question whenever you’re ready.'
+      : 'Keep going. Next unlocks after 5 tries — explore and learn!';
+
+  if(state.attempts >= 5){ $('#nextBtn').disabled = false; }
+}
+
+function resetSelection(){
+  state.pickA = null; state.pickB = null;
+  [...document.querySelectorAll('.denom')].forEach(b=>b.classList.remove('selected'));
+  updatePicks();
+  $('#hint').textContent = 'Pick two denominators, then press Check.';
+  $('#cmpResult').textContent = '';
+}
+
+function gotoNext(){
+  // decide next difficulty based on wrongs at time of unlock/press
+  let msg='';
+  if(state.wrongs === 0){
+    state.level = clamp(state.level+1,1,3);
+    msg = "You nailed it! Let's give you something more challenging!";
+  }else if(state.wrongs === 3){
+    // keep same
+    msg = "You're on track! Keep going!";
+  }else if(state.wrongs > 3){
+    state.level = clamp(state.level-1,1,3);
+    msg = "Hang in there! We'll help you out!";
+  }else{
+    // 1–2 wrong → mild nudge harder but not required
+    msg = "Nice learning! Let's keep building.";
+  }
+
+  state.q += 1;
+  // new round
+  state.targetN = genTarget(state.level);
+  state.pickA = state.pickB = null;
+  state.attempts = 0; state.wrongs = 0; state.solved = false;
+
+  // refresh UI
+  $('#nextBtn').disabled = true;
+  $('#hint').textContent = msg;
+  $('#equation').textContent = `1/${state.targetN} = 1/– + 1/–`;
+  $('#ledeTarget').textContent = `1/${state.targetN}`;
+  $('#targetText').textContent = `1/${state.targetN}`;
+  $('#pillTarget').textContent = `1/${state.targetN}`;
+  updatePills();
+  drawDenoms();
+  updatePicks();
+  coach.start(state.targetN);
+}
+
+/* ---------- boot ---------- */
+function start(){
+  state.targetN = genTarget(state.level);
+  updatePills();
+  $('#ledeTarget').textContent = `1/${state.targetN}`;
+  $('#targetText').textContent = `1/${state.targetN}`;
+  $('#pillTarget').textContent = `1/${state.targetN}`;
+  drawDenoms();
+  updatePicks();
+  coach.start(state.targetN);
+
+  $('#checkBtn').addEventListener('click', checkAnswer);
+  $('#resetBtn').addEventListener('click', resetSelection);
+  $('#nextBtn').addEventListener('click', gotoNext);
+}
+start();
 </script>
 </body>
 </html>
