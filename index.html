@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -6,123 +6,362 @@
 <title>Unit Fraction Builder</title>
 <style>
   :root{
-    --bg:#f7fafc; /* very light */
+    --bg:#f7f9fc;
     --card:#ffffff;
-    --ink:#1f2937;
-    --muted:#4b5563;
-    --accent:#2563eb;
-    --good:#059669;
-    --bad:#dc2626;
-    --ring: 0 0 0 3px rgba(37,99,235,.25);
-    --radius:16px;
+    --ink:#0f172a; /* slate-900 */
+    --muted:#475569; /* slate-600 */
+    --soft:#e2e8f0; /* slate-200 */
+    --brand:#2563eb; /* blue-600 */
+    --brand-ghost:#dbeafe; /* blue-100 */
+    --ok:#16a34a; /* green-600 */
+    --bad:#dc2626; /* red-600 */
+    --shadow:0 6px 18px rgba(15,23,42,.08);
   }
-  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;}
-  .wrap{max-width:820px;margin:auto;padding:20px;}
-  h1{margin:6px 0 14px;font-size:clamp(22px,3.6vw,34px);}
-  .row{display:grid;gap:12px}
-  .grid-2{grid-template-columns:1fr 1fr}
-  @media (max-width:700px){.grid-2{grid-template-columns:1fr}}
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,.05);padding:16px}
-  .pill{display:inline-flex;gap:8px;align-items:center;background:#eef2ff;color:#3730a3;border-radius:999px;padding:6px 10px;font-weight:600}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
+  .wrap{max-width:860px;margin:24px auto;padding:0 16px;}
+  header h1{margin:.2rem 0 0 0;font-size:clamp(28px,4.2vw,40px);}
+  header p{margin:.25rem 0 1rem 0;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:860px){ .grid{grid-template-columns: 3fr 2fr;} }
+
+  .card{background:var(--card);border:1px solid var(--soft);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+  .title{font-weight:700;margin:0 0 8px}
   .muted{color:var(--muted)}
-  .btn{
-    appearance:none;border:0;border-radius:12px;padding:12px 14px;
-    background:#eef2ff;color:#111827;font-weight:700;cursor:pointer;
-    transition:.15s transform ease, .15s background ease; width:100%;
+  .pill{display:inline-block;padding:.25rem .6rem;border-radius:999px;background:var(--brand-ghost);color:#1e3a8a;font-weight:600;font-size:.9rem;margin-right:.4rem}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+  /* Denominator buttons */
+  .choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:6px}
+  @media(max-width:420px){ .choices{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  button.choice{
+    appearance:none;border:1px solid var(--soft);border-radius:12px;background:#fff;
+    padding:14px 0;font-weight:700;font-size:18px;cursor:pointer;box-shadow:var(--shadow);
   }
-  .btn:hover{transform:translateY(-1px)}
-  .btn[aria-pressed="true"]{outline:none;box-shadow:var(--ring)}
-  .btn.primary{background:var(--accent);color:white}
-  .btn.neutral{background:#e5e7eb}
-  .answers{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px}
-  .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;background:#111827;color:#f9fafb;border-radius:8px;padding:2px 6px;font-size:.85rem}
-  .tag{display:inline-block;background:#f1f5f9;border-radius:8px;padding:2px 8px;margin-right:6px}
-  .bar{width:100%;height:34px;border-radius:10px;background:#e5e7eb;position:relative;overflow:hidden}
-  .bar .shade{position:absolute;left:0;top:0;bottom:0;background:#93c5fd}
-  .bar .ticks{position:absolute;inset:0;display:grid}
-  .bar .ticks>div{border-right:1px solid rgba(0,0,0,.08)}
-  .labelRow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:.2rem 0 .4rem}
-  .labelRow b{font-size:0.95rem}
-  .callout{border-left:5px solid var(--accent);padding:8px 12px;background:#eff6ff;border-radius:10px}
-  .ok{color:var(--good)} .bad{color:var(--bad)}
-  .hide{display:none}
-  .sm{font-size:.95rem}
+  button.choice:hover{outline:2px solid var(--brand-ghost)}
+  button.choice.sel{outline:3px solid var(--brand)}
+  button.primary{background:var(--brand);color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+  button.secondary{background:#fff;color:var(--ink);border:1px solid var(--soft);border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+  button:disabled{opacity:.45;cursor:not-allowed}
+
+  .result{margin-top:8px;font-weight:700}
+  .good{color:var(--ok)} .bad{color:var(--bad)}
+
+  /* Fraction bar */
+  .barWrap{border:1px solid var(--soft);border-radius:10px;overflow:hidden;height:18px;display:flex;background:#fff}
+  .barSeg{flex:1;border-right:1px solid var(--soft)}
+  .barSeg:last-child{border-right:none}
+  .barSeg.shade{background:rgba(37,99,235,.25)}
+
+  .tiny{font-size:.9rem}
+  .footer{margin:28px 0;color:var(--muted);font-size:.9rem}
 </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Unit Fraction Builder</h1>
-    <p class="muted sm">Pick two unit fractions <span class="kbd">1/a</span> and <span class="kbd">1/b</span> whose sum equals the target <span class="kbd">1/n</span>.</p>
-
-    <div id="status" class="row grid-2">
-      <div class="card">
-        <div class="pill">Question <span id="qNum">1</span> / 10</div>
-        <div style="height:6px"></div>
-        <div><span class="tag">Score: <b id="score">0</b></span> <span class="tag">Target: <b id="targetText">—</b></span></div>
+    <header>
+      <h1>Unit Fraction Builder</h1>
+      <p class="muted">Let’s make this fraction: <strong id="targetText">1/?</strong>.  
+        Pick two unit fractions <em>1/a</em> and <em>1/b</em> whose sum equals the target.</p>
+      <div class="row tiny">
+        <span class="pill">Question <span id="qNum">1</span>/10</span>
+        <span class="pill">Score <span id="score">0</span></span>
+        <span class="pill">Target <span id="targetPill">1/?</span></span>
       </div>
-      <div class="card" id="starters">
-        <b>Warm-up thinking</b>
-        <ol class="sm" style="margin:.4rem 0 .2rem">
-          <li>Our target is <span id="tSmallBig">1/n</span>. Is this a <i>small</i> amount or a big amount?</li>
-          <li>Unit fractions get smaller when denominators get bigger. Do you expect a “big+small” pair or “small+small”?</li>
-          <li>Quick estimate: will both denominators likely be bigger than <span id="tNum">n</span> or around it?</li>
-        </ol>
-      </div>
+    </header>
+
+    <div class="grid">
+
+      <!-- Left column: Game -->
+      <main id="gameCol" class="grid-col">
+        <div class="card" id="targetCard">
+          <h3 class="title">Target</h3>
+          <div id="targetHint" class="muted">Make <b id="targetExplain">1/?</b> using two unit fractions.</div>
+        </div>
+
+        <div class="card">
+          <h3 class="title">Pick exactly two denominators</h3>
+          <div id="choices" class="choices"><!-- buttons inject here --></div>
+          <div class="row" style="margin-top:10px">
+            <button id="checkBtn" class="primary" disabled>Check Answer</button>
+            <button id="resetBtn" class="secondary">Reset Selection</button>
+            <button id="nextBtn" class="secondary" disabled>Next ▸</button>
+          </div>
+          <div id="result" class="result"></div>
+          <div id="tips" class="muted tiny" style="margin-top:6px;">Pick two denominators, then press <b>Check</b>.</div>
+        </div>
+
+        <div class="card">
+          <h3 class="title">How it works</h3>
+          <p class="tiny">We want <code>1/a + 1/b = 1/n</code>. That’s true exactly when <code>n(a+b) = ab</code>.
+            For each question the game chooses a target denominator <code>n</code>, generates a valid pair
+            <code>(a,b)</code>, mixes in good distractors, and asks you to find the correct pair.</p>
+          <p class="tiny">Difficulty adapts to you: a short correct streak moves you up a level; a short struggle moves you down. You can tune the ranges in the code marked <b>ADAPTIVE SETTINGS</b>.</p>
+        </div>
+      </main>
+
+      <!-- Right column: Coach panel -->
+      <aside class="card" id="coach">
+        <h3 class="title">Think-Aloud Coach</h3>
+
+        <div id="coachPrompt" class="tiny">
+          <!-- Starter questions injected on start -->
+        </div>
+
+        <div id="firstPickViz" style="margin-top:12px; display:none;">
+          <div class="tiny muted" style="margin-bottom:6px;">Visual of your pick</div>
+          <div id="barLabel" class="tiny" style="margin-bottom:6px;"></div>
+          <div id="fracBar" class="barWrap"></div>
+          <div class="tiny muted" style="margin-top:6px;">
+            You chose <b id="oneOverA">1/a</b>. The bar shows <b>1/a</b> as one shaded piece.
+          </div>
+        </div>
+      </aside>
+
     </div>
 
-    <div class="card">
-      <div class="labelRow"><b>Visuals</b><span class="muted sm">Target on top • Your picks below</span></div>
-      <div class="labelRow"><span class="muted">Target</span><span id="targetFrac" class="kbd">1/n</span></div>
-      <div id="barTarget" class="bar" aria-label="Target fraction bar"></div>
-
-      <div class="labelRow"><span class="muted">Your first pick</span><span id="pickA" class="kbd">—</span></div>
-      <div id="barA" class="bar" aria-label="First pick bar"></div>
-
-      <div class="labelRow"><span class="muted">Your second pick</span><span id="pickB" class="kbd">—</span></div>
-      <div id="barB" class="bar" aria-label="Second pick bar"></div>
-    </div>
-
-    <div class="card" id="phasePickOne">
-      <b>Your first move</b>
-      <p class="sm">Pick <b>one unit fraction</b> you think might work. Why that one?</p>
-      <div id="choicesOne" class="answers"></div>
-    </div>
-
-    <div class="card hide" id="phasePickTwo">
-      <b>Now figure out the other</b>
-      <p class="sm">How would you work out what the other denominator should be so that <span class="kbd">1/a + 1/b = 1/n</span>?</p>
-      <ul class="sm">
-        <li>Use the clue: it works exactly when <span class="kbd">n(a + b) = ab</span>.</li>
-        <li>Or think by size: if <span class="kbd">1/a</span> is already big, then <span class="kbd">1/b</span> must be smaller, so <span class="kbd">b</span> should be bigger.</li>
-      </ul>
-      <div id="choicesTwo" class="answers"></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="checkBtn" class="btn primary">Check Answer</button>
-        <button id="resetBtn" class="btn neutral">Reset Selection</button>
-        <button id="nextBtn" class="btn neutral hide">Next</button>
-      </div>
-    </div>
-
-    <div class="card hide" id="feedback">
-      <b>Use your mistake like a scientist</b>
-      <div id="fbText" class="callout sm" style="margin:.5rem 0"></div>
-      <div class="sm">
-        <p>If you try one pair and it’s <b>too big</b> or <b>too small</b>, what does that tell you about your next guess?</p>
-        <p><b>Think aloud:</b></p>
-        <ul>
-          <li>“Is our sum bigger or smaller than <span id="targetMini">1/n</span>?”</li>
-          <li>“So should our denominators be bigger numbers or smaller numbers next time?”</li>
-          <li>“Which number will I change first, and why?”</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <p class="muted sm">How it works: we want <span class="kbd">1/a + 1/b = 1/n</span>. That’s true exactly when <span class="kbd">n(a+b)=ab</span>. Difficulty adapts to you.</p>
-    </div>
+    <div class="footer">© 2025 • Made for Primary 4–5 learners • Math is pattern-spotting!</div>
   </div>
 
 <script>
-/* ------------ helpers ------------- */
-const $ = sel =>
+/* ===========================
+   ADAPTIVE SETTINGS
+   Level ranges tune the target n and distractor pools.
+=========================== */
+const adaptive = {
+  enabled: true,
+  level: 1, // 1 = easier, 2 = medium, 3 = harder
+  correctStreak: 0,
+  struggleStreak: 0,
+  // Choose target n by level
+  pickTarget(level){
+    if(level === 1) return randFrom([6,8,9,10,12]);
+    if(level === 2) return randFrom([10,12,14,15,16,18,20]);
+    return randFrom([18,20,21,24,25,28,30,40]); // can include larger
+  }
+};
 
+/* ======= State ======= */
+let question = 1, total = 10, score = 0;
+let targetN = 8; // default on load; replaced by generateQuestion()
+let answerA = null, answerB = null;
+let picked = []; // selected denominators
+let firstPickShown = false;
+
+/* ======= Utilities ======= */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const randFrom = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = arr => arr.sort(()=>Math.random()-.5);
+
+/* Factor trick: (a-n)(b-n)=n^2, set x*y=n^2, a=n+x, b=n+y */
+function factorPairsOfNSquared(n){
+  const pairs = [];
+  for(let x=1;x*x<=n*n;x++){
+    if((n*n)%x===0){ pairs.push([x,(n*n)/x]); }
+  }
+  return pairs;
+}
+
+/* Build a valid (a,b) for a given n */
+function buildAnswerPair(n){
+  const pairs = factorPairsOfNSquared(n);
+  // filter out extreme x=1 or x=n^2 occasionally for variety
+  const filtered = pairs.filter(([x,y]) => x>=1 && y>=1);
+  const [x,y] = randFrom(filtered);
+  return [n+x, n+y];
+}
+
+/* Make distractors that feel plausible (same family, near misses) */
+function buildChoices(n,a,b){
+  const bag = new Set([a,b]);
+  // near a & b
+  [a-1,a+1,b-1,b+1,a+2,b+2,a+3,b+3].forEach(v=>{ if(v>2) bag.add(v); });
+  // same family: multiples / factors of n
+  [2,3,4,5].forEach(k => bag.add(n*k));
+  [n-1,n+1,n+2].forEach(v => v>2 && bag.add(v));
+  // ensure enough, then pick 8
+  const arr = Array.from(bag);
+  const trimmed = shuffle(arr).slice(0,8);
+  // guarantee a & b are inside
+  if(!trimmed.includes(a)) trimmed[0]=a;
+  if(!trimmed.includes(b)) trimmed[1]=b;
+  return shuffle(trimmed);
+}
+
+/* ======= Coach (UI prompts) ======= */
+const coach = (() => {
+  const promptEl = () => $("#coachPrompt");
+  function setPrompt(html){ promptEl().innerHTML = html; }
+
+  function starter(n){
+    setPrompt(`
+      <div class="tiny"><b>Starter check-in (before you try):</b></div>
+      <ol class="tiny" style="margin-top:6px; padding-left:20px">
+        <li>Our target is <b>1/${n}</b>. Is this a <b>small</b> amount or a big amount?</li>
+        <li>Unit fractions get <b>smaller</b> when denominators get bigger. So do you expect a “big+small” pair or “small+small”?</li>
+        <li>Quick estimate: will <b>both</b> denominators likely be <b>bigger than ${n}</b> or around it?</li>
+      </ol>
+      <div class="tiny" style="margin-top:8px;"><b>Your first move</b>: Pick <b>one denominator</b> you think might work. Why that one?</div>
+    `);
+  }
+
+  function showBar(a){
+    const wrap = $("#firstPickViz");
+    const bar = $("#fracBar");
+    $("#barLabel").textContent = `You chose 1/${a}. The bar is split into ${a} equal parts.`;
+    $("#oneOverA").textContent = `1/${a}`;
+    bar.innerHTML = "";
+    for(let i=1;i<=a;i++){
+      const seg = document.createElement("div");
+      seg.className = "barSeg" + (i===1 ? " shade":"");
+      bar.appendChild(seg);
+    }
+    wrap.style.display = "block";
+  }
+
+  return {
+    start(n){
+      starter(n);
+      $("#firstPickViz").style.display = "none";
+    },
+    onFirstPick(a){
+      showBar(a);
+      setPrompt(`
+        <div class="tiny"><b>Nice pick.</b> How will you find the second number?</div>
+        <ul class="tiny" style="margin-top:6px; padding-left:18px">
+          <li>Try same-family numbers first (near your first pick or linked to the target).</li>
+          <li>If the sum is too big, your numbers were too small. If it’s too small, your numbers were too big.</li>
+        </ul>
+      `);
+    },
+    onCheck(n, sum, target, correct){
+      if(correct){
+        setPrompt(`
+          <div class="tiny"><b>Great!</b> What pattern did you notice about the denominators that worked for <b>1/${n}</b>?</div>
+          <div class="tiny" style="margin-top:6px;">How could you guess faster next time using that pattern?</div>
+        `);
+        return;
+      }
+      const bigger = sum > target;
+      setPrompt(`
+        <div class="tiny">Our sum is <b>${bigger? "bigger":"smaller"}</b> than <b>1/${n}</b>.</div>
+        <div class="tiny" style="margin-top:6px;">So next try, should our denominators be <b>${bigger? "bigger":"smaller"}</b> or <b>${bigger? "smaller":"bigger"}</b>?</div>
+        <div class="tiny" style="margin-top:6px;"><b>Which number will you change first, and why?</b></div>
+      `);
+    }
+  };
+})();
+
+/* ======= Render & Game Flow ======= */
+function renderQuestion(){
+  // target by level
+  targetN = adaptive.pickTarget(adaptive.level);
+  const [a,b] = buildAnswerPair(targetN);
+  answerA = a; answerB = b;
+  firstPickShown = false;
+  picked = [];
+
+  // UI text
+  $("#targetText").textContent = `1/${targetN}`;
+  $("#targetPill").textContent = `1/${targetN}`;
+  $("#targetExplain").textContent = `1/${targetN}`;
+  $("#targetHint").innerHTML = `Make <b>1/${targetN}</b> using two unit fractions.`;
+  $("#qNum").textContent = question;
+
+  // Build buttons
+  const pool = buildChoices(targetN,a,b);
+  const box = $("#choices");
+  box.innerHTML = "";
+  pool.forEach(n=>{
+    const btn = document.createElement("button");
+    btn.className="choice";
+    btn.textContent = n;
+    btn.addEventListener("click", () => togglePick(btn, n));
+    box.appendChild(btn);
+  });
+
+  // reset UI bits
+  $("#result").textContent = "";
+  $("#result").className = "result";
+  $("#checkBtn").disabled = true;
+  $("#nextBtn").disabled = true;
+  $("#tips").textContent = "Pick two denominators, then press Check.";
+  coach.start(targetN);
+}
+
+function togglePick(btn, n){
+  const idx = picked.indexOf(n);
+  if(idx>-1){
+    picked.splice(idx,1);
+    btn.classList.remove("sel");
+  }else{
+    if(picked.length===2){
+      // replace the second pick
+      const last = picked.pop();
+      // unselect the last button
+      const lastBtn = $$(".choice").find(b => b.textContent==String(last));
+      if(lastBtn) lastBtn.classList.remove("sel");
+    }
+    picked.push(n);
+    btn.classList.add("sel");
+    if(!firstPickShown){ coach.onFirstPick(n); firstPickShown=true; }
+  }
+  $("#checkBtn").disabled = picked.length!==2;
+}
+
+function resetSelection(){
+  picked = [];
+  $$(".choice").forEach(b=>b.classList.remove("sel"));
+  $("#checkBtn").disabled = true;
+  $("#result").textContent="";
+  $("#nextBtn").disabled = true;
+  $("#tips").textContent = "Pick two denominators, then press Check.";
+}
+
+function checkAnswer(){
+  if(picked.length!==2) return;
+  const [a,b] = picked;
+  const sum = 1/a + 1/b;
+  const target = 1/targetN;
+  const correct = Math.abs(sum - target) < 1e-10;
+
+  if(correct){
+    score++; $("#score").textContent = score;
+    $("#result").textContent = "Nice! You built the target exactly.";
+    $("#result").className = "result good";
+    $("#nextBtn").disabled = false;
+    // adaptive up
+    adaptive.correctStreak++; adaptive.struggleStreak=0;
+    if(adaptive.enabled && adaptive.correctStreak>=3 && adaptive.level<3){ adaptive.level++; adaptive.correctStreak=0; }
+  }else{
+    const hint = sum > target ? "too BIG (numbers too small)" : "too SMALL (numbers too big)";
+    $("#result").textContent = `Not yet. Your sum was ${hint}. Try again.`;
+    $("#result").className = "result bad";
+    // adaptive down
+    adaptive.struggleStreak++; adaptive.correctStreak=0;
+    if(adaptive.enabled && adaptive.struggleStreak>=3 && adaptive.level>1){ adaptive.level--; adaptive.struggleStreak=0; }
+  }
+  coach.onCheck(targetN, sum, target, correct);
+}
+
+function nextQuestion(){
+  if(question<total){ question++; renderQuestion(); resetSelection(); }
+  else{
+    $("#choices").innerHTML = "";
+    $("#result").className="result good";
+    $("#result").textContent = `Great work! Final score: ${score}/${total}.`;
+    $("#tips").textContent = "Refresh to play again.";
+    $("#checkBtn").disabled = true; $("#nextBtn").disabled = true;
+  }
+}
+
+/* ======= Wire up buttons ======= */
+$("#checkBtn").addEventListener("click", checkAnswer);
+$("#resetBtn").addEventListener("click", resetSelection);
+$("#nextBtn").addEventListener("click", nextQuestion);
+
+/* ======= Go! ======= */
+renderQuestion();
+</script>
+</body>
+</html>
