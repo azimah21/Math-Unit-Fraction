@@ -1,356 +1,127 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Unit Fraction Builder</title>
-  <style>
-    :root{
-      --bg:#f7fafc; /* lighter background */
-      --card:#ffffff;
-      --ink:#0f172a;
-      --muted:#475569;
-      --accent:#2563eb;
-      --accent-ink:#fff;
-      --good:#16a34a;
-      --bad:#dc2626;
-      --hint:#0ea5e9;
-      --radius:14px;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-    .wrap{max-width:820px;margin:auto;padding:16px 14px 80px}
-    h1{font-size:clamp(24px,4.8vw,36px);margin:.4rem 0 1rem}
-    .sub{color:var(--muted);font-size:clamp(14px,2.8vw,16px)}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .pill{background:#e2e8f0;border-radius:999px;padding:6px 10px;font-size:14px;color:#0f172a}
-    .card{background:var(--card);border-radius:var(--radius);box-shadow:0 6px 20px rgba(15,23,42,.06);padding:14px}
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    @media (max-width:520px){.grid{grid-template-columns:repeat(3,1fr)}}
-    @media (max-width:380px){.grid{grid-template-columns:repeat(2,1fr)}}
-    button.opt{
-      padding:12px 10px;border-radius:12px;border:2px solid #e2e8f0;background:#f8fafc;
-      font-weight:700;font-size:16px;min-height:48px
-    }
-    button.opt[aria-pressed="true"]{border-color:var(--accent);outline:3px solid rgba(37,99,235,.15);background:#eef2ff}
-    .actions{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{
-      background:var(--accent);color:var(--accent-ink);border:none;border-radius:12px;
-      padding:12px 16px;font-weight:700;min-width:140px
-    }
-    .btn.secondary{background:#e2e8f0;color:#0f172a}
-    .btn:disabled{opacity:.5}
-    .kicker{font-weight:700;color:#0f172a;margin-bottom:6px}
-    .muted{color:var(--muted)}
-    .ok{color:var(--good);font-weight:700}
-    .bad{color:var(--bad);font-weight:700}
-    .hint{color:var(--hint);font-weight:700}
-    canvas{width:100%;height:60px;background:#fff;border-radius:10px;border:1px solid #e5e7eb}
-    .sr{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
-    .badge{background:#ecfeff;color:#0e7490;border:1px solid #cffafe;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700}
-    .block-gap{display:grid;gap:12px}
-    .spacer{height:6px}
-    .footer{position:fixed;inset:auto 0 0 0;background:linear-gradient(180deg,rgba(247,250,252,0),var(--bg) 22%,var(--bg));padding:10px 14px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Unit Fraction Builder</title>
+<style>
+  :root{
+    --bg:#f7fafc; /* very light */
+    --card:#ffffff;
+    --ink:#1f2937;
+    --muted:#4b5563;
+    --accent:#2563eb;
+    --good:#059669;
+    --bad:#dc2626;
+    --ring: 0 0 0 3px rgba(37,99,235,.25);
+    --radius:16px;
+  }
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;}
+  .wrap{max-width:820px;margin:auto;padding:20px;}
+  h1{margin:6px 0 14px;font-size:clamp(22px,3.6vw,34px);}
+  .row{display:grid;gap:12px}
+  .grid-2{grid-template-columns:1fr 1fr}
+  @media (max-width:700px){.grid-2{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,.05);padding:16px}
+  .pill{display:inline-flex;gap:8px;align-items:center;background:#eef2ff;color:#3730a3;border-radius:999px;padding:6px 10px;font-weight:600}
+  .muted{color:var(--muted)}
+  .btn{
+    appearance:none;border:0;border-radius:12px;padding:12px 14px;
+    background:#eef2ff;color:#111827;font-weight:700;cursor:pointer;
+    transition:.15s transform ease, .15s background ease; width:100%;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn[aria-pressed="true"]{outline:none;box-shadow:var(--ring)}
+  .btn.primary{background:var(--accent);color:white}
+  .btn.neutral{background:#e5e7eb}
+  .answers{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px}
+  .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;background:#111827;color:#f9fafb;border-radius:8px;padding:2px 6px;font-size:.85rem}
+  .tag{display:inline-block;background:#f1f5f9;border-radius:8px;padding:2px 8px;margin-right:6px}
+  .bar{width:100%;height:34px;border-radius:10px;background:#e5e7eb;position:relative;overflow:hidden}
+  .bar .shade{position:absolute;left:0;top:0;bottom:0;background:#93c5fd}
+  .bar .ticks{position:absolute;inset:0;display:grid}
+  .bar .ticks>div{border-right:1px solid rgba(0,0,0,.08)}
+  .labelRow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:.2rem 0 .4rem}
+  .labelRow b{font-size:0.95rem}
+  .callout{border-left:5px solid var(--accent);padding:8px 12px;background:#eff6ff;border-radius:10px}
+  .ok{color:var(--good)} .bad{color:var(--bad)}
+  .hide{display:none}
+  .sm{font-size:.95rem}
+</style>
 </head>
 <body>
   <div class="wrap">
     <h1>Unit Fraction Builder</h1>
-    <p class="sub">Pick two unit fractions <strong>1/a</strong> and <strong>1/b</strong> whose sum equals the target <strong>1/n</strong>.</p>
+    <p class="muted sm">Pick two unit fractions <span class="kbd">1/a</span> and <span class="kbd">1/b</span> whose sum equals the target <span class="kbd">1/n</span>.</p>
 
-    <div class="row">
-      <span class="pill">Question: <span id="qno">1</span>/10</span>
-      <span class="pill">Score: <span id="score">0</span></span>
-      <span class="pill">Target: <strong id="target">1/8</strong></span>
-    </div>
-
-    <div class="spacer"></div>
-
-    <!-- Reflection / Coach Panel -->
-    <div id="coach" class="card block-gap" aria-live="polite">
-      <div class="kicker">Starter check-in (before you try):</div>
-      <ol id="starter" class="muted" style="margin:0 0 .25rem 1.1rem">
-        <li>Our target is <span id="starterTarget">1/8</span>. Is this a <em>small</em> amount or a <em>big</em> amount?</li>
-        <li>Unit fractions get <em>smaller</em> when denominators get bigger. So do you expect a &ldquo;big+small&rdquo; pair or &ldquo;small+small&rdquo;?</li>
-        <li>Quick estimate: will <em>both</em> denominators likely be bigger than <span id="nEcho">8</span> or around it?</li>
-      </ol>
-
-      <div id="stepPickOne" class="block-gap" hidden>
-        <div class="kicker">Your first move</div>
-        <p class="muted">Pick <strong>one denominator</strong> you think might work. Why that one?</p>
-        <span class="badge">Visual of your pick</span>
-        <canvas id="bar"></canvas>
-        <p id="barNote" class="muted">You chose <strong id="aEcho">?</strong>. The bar shows <strong>1/<span id="aEcho2">?</span></strong> as one shaded piece.</p>
+    <div id="status" class="row grid-2">
+      <div class="card">
+        <div class="pill">Question <span id="qNum">1</span> / 10</div>
+        <div style="height:6px"></div>
+        <div><span class="tag">Score: <b id="score">0</b></span> <span class="tag">Target: <b id="targetText">—</b></span></div>
       </div>
-
-      <div id="stepFigureOther" class="block-gap" hidden>
-        <div class="kicker">Now figure out the other</div>
-        <p class="muted">How would you work out what the other denominator should be so that <strong>1/a + 1/b = 1/n</strong>?</p>
-        <ul class="muted" style="margin:0 0 0 1.1rem">
-          <li>Use the clue: it works exactly when <strong>n(a + b) = a·b</strong>.</li>
-          <li>Or think size: if <strong>1/a</strong> is already big, then <strong>1/b</strong> must be smaller, so <strong>b</strong> should be bigger.</li>
-        </ul>
-      </div>
-
-      <div id="stepTooBigSmall" class="block-gap" hidden>
-        <div class="kicker">Use your mistake like a scientist</div>
-        <p class="muted">If your first pair is <em>too big</em> or <em>too small</em>, what should you change next?</p>
-        <ul class="muted" style="margin:0 0 0 1.1rem">
-          <li>Is our sum bigger or smaller than <span id="smallTarget">1/8</span>?</li>
-          <li>Should our denominators be <strong>bigger</strong> numbers or <strong>smaller</strong> numbers next time?</li>
-          <li>Which number will you change first, and why?</li>
-        </ul>
+      <div class="card" id="starters">
+        <b>Warm-up thinking</b>
+        <ol class="sm" style="margin:.4rem 0 .2rem">
+          <li>Our target is <span id="tSmallBig">1/n</span>. Is this a <i>small</i> amount or a big amount?</li>
+          <li>Unit fractions get smaller when denominators get bigger. Do you expect a “big+small” pair or “small+small”?</li>
+          <li>Quick estimate: will both denominators likely be bigger than <span id="tNum">n</span> or around it?</li>
+        </ol>
       </div>
     </div>
 
-    <div class="spacer"></div>
-
-    <!-- Options Card -->
-    <div class="card block-gap">
-      <div class="kicker">Pick exactly two denominators</div>
-      <div id="options" class="grid" role="group" aria-label="Denominator choices"></div>
-      <div class="actions">
-        <button id="check" class="btn" disabled>Check Answer</button>
-        <button id="reset" class="btn secondary">Reset Selection</button>
-        <button id="next" class="btn secondary" disabled>Next ▸</button>
-      </div>
-      <p id="feedback" class="muted" aria-live="polite"></p>
-    </div>
-
-    <div class="spacer"></div>
-
-    <!-- Explainer -->
     <div class="card">
-      <div class="kicker">How it works</div>
-      <p class="muted">We want <strong>1/a + 1/b = 1/n</strong>. That’s true exactly when <strong>n(a + b) = ab</strong>. Each question chooses a target <em>n</em>, generates a valid pair <em>(a,b)</em>, mixes in distractors, and asks you to find the correct pair.</p>
-      <p class="muted">Difficulty adapts to you. Short streaks move you up; short struggles nudge you down. You can tune ranges in the code under <strong>ADAPTIVE SETTINGS</strong>.</p>
+      <div class="labelRow"><b>Visuals</b><span class="muted sm">Target on top • Your picks below</span></div>
+      <div class="labelRow"><span class="muted">Target</span><span id="targetFrac" class="kbd">1/n</span></div>
+      <div id="barTarget" class="bar" aria-label="Target fraction bar"></div>
+
+      <div class="labelRow"><span class="muted">Your first pick</span><span id="pickA" class="kbd">—</span></div>
+      <div id="barA" class="bar" aria-label="First pick bar"></div>
+
+      <div class="labelRow"><span class="muted">Your second pick</span><span id="pickB" class="kbd">—</span></div>
+      <div id="barB" class="bar" aria-label="Second pick bar"></div>
+    </div>
+
+    <div class="card" id="phasePickOne">
+      <b>Your first move</b>
+      <p class="sm">Pick <b>one unit fraction</b> you think might work. Why that one?</p>
+      <div id="choicesOne" class="answers"></div>
+    </div>
+
+    <div class="card hide" id="phasePickTwo">
+      <b>Now figure out the other</b>
+      <p class="sm">How would you work out what the other denominator should be so that <span class="kbd">1/a + 1/b = 1/n</span>?</p>
+      <ul class="sm">
+        <li>Use the clue: it works exactly when <span class="kbd">n(a + b) = ab</span>.</li>
+        <li>Or think by size: if <span class="kbd">1/a</span> is already big, then <span class="kbd">1/b</span> must be smaller, so <span class="kbd">b</span> should be bigger.</li>
+      </ul>
+      <div id="choicesTwo" class="answers"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="checkBtn" class="btn primary">Check Answer</button>
+        <button id="resetBtn" class="btn neutral">Reset Selection</button>
+        <button id="nextBtn" class="btn neutral hide">Next</button>
+      </div>
+    </div>
+
+    <div class="card hide" id="feedback">
+      <b>Use your mistake like a scientist</b>
+      <div id="fbText" class="callout sm" style="margin:.5rem 0"></div>
+      <div class="sm">
+        <p>If you try one pair and it’s <b>too big</b> or <b>too small</b>, what does that tell you about your next guess?</p>
+        <p><b>Think aloud:</b></p>
+        <ul>
+          <li>“Is our sum bigger or smaller than <span id="targetMini">1/n</span>?”</li>
+          <li>“So should our denominators be bigger numbers or smaller numbers next time?”</li>
+          <li>“Which number will I change first, and why?”</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="muted sm">How it works: we want <span class="kbd">1/a + 1/b = 1/n</span>. That’s true exactly when <span class="kbd">n(a+b)=ab</span>. Difficulty adapts to you.</p>
     </div>
   </div>
 
-  <div class="footer"></div>
-
-  <script>
-    /***** ADAPTIVE SETTINGS *****/
-    const LEVELS = [
-      { nRange:[6,10], pool:[4,5,6,8,9,10,12,15,18,20,24,30,40] },
-      { nRange:[8,14], pool:[4,5,6,8,9,10,12,14,15,16,18,20,24,27,30,36,40,45] },
-      { nRange:[10,18], pool:[6,8,9,10,12,14,15,16,18,20,21,24,27,28,30,32,36,40,45,48] }
-    ];
-    let level=0, q=1, totalQ=10, score=0, streak=0;
-
-    /***** State *****/
-    let n, pair, opts=[], chosen=[];
-    const el = id=>document.getElementById(id);
-
-    function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a}
-    function pickRandom(arr){return arr[Math.floor(Math.random()*arr.length)]}
-
-    // Generate a valid (a,b) for target n using Egyptian-fraction identity:
-    // choose a multiple k of n; set a = n+k and b = n*k
-    function makePair(n){
-      const kList=[2,3,4,5,6];
-      const k=pickRandom(kList);
-      return [n+k, n*k]; // guarantees 1/(n+k) + 1/(nk) = 1/n
-    }
-
-    function makeOptions(){
-      const pool = LEVELS[level].pool.slice();
-      // ensure correct pair members are in the pool
-      if(!pool.includes(pair[0])) pool.push(pair[0]);
-      if(!pool.includes(pair[1])) pool.push(pair[1]);
-      // add distractors by nudging near the true values
-      const d = new Set(pool);
-      [ -2,-1,1,2 ].forEach(delta=>{
-        d.add(Math.max(3,pair[0]+delta));
-        d.add(Math.max(3,pair[1]+delta));
-      });
-      // shuffle and sample 8–10 options
-      const arr=[...d];
-      arr.sort(()=>Math.random()-0.5);
-      return arr.slice(0,10).sort((a,b)=>a-b);
-    }
-
-    function resetSelection(){
-      chosen.length=0;
-      [...el('options').querySelectorAll('button.opt')].forEach(b=>b.setAttribute('aria-pressed','false'));
-      el('check').disabled=true;
-      // reflection: back to “pick one” if not yet
-      showPickOneIfNeeded();
-      drawBar(null);
-      el('aEcho').textContent='?';
-      el('aEcho2').textContent='?';
-    }
-
-    function renderOptions(){
-      const box=el('options');
-      box.innerHTML='';
-      opts.forEach(val=>{
-        const b=document.createElement('button');
-        b.className='opt';
-        b.type='button';
-        b.textContent=val;
-        b.setAttribute('aria-pressed','false');
-        b.addEventListener('click', ()=>{
-          // toggle/choose up to two
-          const pressed = b.getAttribute('aria-pressed')==='true';
-          if(pressed){
-            b.setAttribute('aria-pressed','false');
-            const i=chosen.indexOf(val);
-            if(i>-1) chosen.splice(i,1);
-          }else{
-            if(chosen.length<2){ chosen.push(val); b.setAttribute('aria-pressed','true'); }
-            else{
-              // replace the second pick for ease on mobile
-              chosen[1]=val;
-              [...box.querySelectorAll('button.opt')].forEach(btn=>{
-                if(+btn.textContent===val) btn.setAttribute('aria-pressed','true');
-              });
-            }
-          }
-          // reflection: once ONE is chosen, show fraction bar + “figure other”
-          if(chosen.length>=1){
-            showPickOne(chosen[0]);
-          }else{
-            showPickOneIfNeeded();
-          }
-          el('check').disabled = chosen.length!==2;
-        });
-        box.appendChild(b);
-      });
-    }
-
-    function setBadges(){
-      el('starterTarget').textContent=`1/${n}`;
-      el('smallTarget').textContent=`1/${n}`;
-      el('nEcho').textContent=n;
-      el('target').textContent=`1/${n}`;
-      el('qno').textContent=q;
-      el('score').textContent=score;
-    }
-
-    function startQuestion(){
-      n = randInt(...LEVELS[level].nRange);
-      pair = makePair(n);
-      opts = makeOptions();
-      setBadges();
-      renderOptions();
-      resetSelection();
-      el('feedback').textContent='';
-      // Starter visible, later steps hidden
-      el('starter').parentElement.hidden=false;
-      el('stepPickOne').hidden=true;
-      el('stepFigureOther').hidden=true;
-      el('stepTooBigSmall').hidden=true;
-      el('next').disabled=true;
-    }
-
-    function sumVsTarget(a,b){
-      const sum = 1/a + 1/b;
-      const tgt = 1/n;
-      if(Math.abs(sum-tgt)<1e-10) return 0;
-      return sum>tgt? 1 : -1; // 1 => too big; -1 => too small
-    }
-
-    function check(){
-      const [a,b]=chosen.slice().sort((x,y)=>x-y);
-      const correct = (a===Math.min(...pair) && b===Math.max(...pair));
-      if(correct){
-        score++; streak++;
-        el('feedback').innerHTML = `<span class="ok">Nice! ${fmt(a)} + ${fmt(b)} equals 1/${n}.</span>`;
-        el('next').disabled=false;
-        // level up/down lightweight
-        if(streak>=2 && level<LEVELS.length-1){ level++; streak=0; }
-        el('score').textContent=score;
-      }else{
-        streak= Math.max(0, streak-1);
-        const cmp = sumVsTarget(a,b);
-        const too = cmp>0? 'too big' : 'too small';
-        el('feedback').innerHTML =
-          `<span class="bad">Not yet.</span> Your sum is <em>${too}</em>. ` +
-          `<span class="hint">Think: to make the sum ${cmp>0?'smaller':'bigger'}, should the denominators get ${cmp>0?'bigger':'smaller'}?</span>`;
-        // reveal “use your mistake” prompts
-        el('stepTooBigSmall').hidden=false;
-        // gentle level down if repeated misses within one item
-      }
-    }
-
-    function nextQ(){
-      q++;
-      if(q>totalQ){
-        alert(`Great work! Final score: ${score}/${totalQ}`);
-        // reset run
-        level=0; q=1; score=0; streak=0;
-      }
-      startQuestion();
-    }
-
-    function fmt(a){ return `1/${a}` }
-
-    /***** Fraction-bar visual (for the first chosen denominator a) *****/
-    const bar = el('bar');
-    const ctx = bar.getContext('2d');
-
-    function drawBar(a){
-      // scale for device pixels
-      const dpr = window.devicePixelRatio || 1;
-      const cssW = bar.clientWidth || 300;
-      const cssH = 60;
-      bar.width = Math.round(cssW*dpr);
-      bar.height= Math.round(cssH*dpr);
-      ctx.scale(dpr,dpr);
-
-      // background
-      ctx.clearRect(0,0,cssW,cssH);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0,0,cssW,cssH);
-
-      if(!a) return;
-
-      // draw a segments; shade one piece
-      const pad=10, w=cssW-2*pad, h=32, y=14, x=pad;
-      ctx.lineWidth=1;
-      ctx.strokeStyle='#cbd5e1';
-      ctx.strokeRect(x,y,w,h);
-
-      const segW = w/a;
-      for(let i=1;i<a;i++){
-        const xx = x + i*segW;
-        ctx.beginPath(); ctx.moveTo(xx,y); ctx.lineTo(xx,y+h); ctx.stroke();
-      }
-      // shade one piece
-      ctx.fillStyle='#dbeafe';
-      ctx.fillRect(x,y,segW,h);
-
-      // label “1/a”
-      ctx.fillStyle='#0f172a';
-      ctx.font='600 14px system-ui';
-      ctx.fillText(`1/${a}`, x + 6, y + h + 20);
-    }
-
-    function showPickOneIfNeeded(){
-      if(chosen.length===0){
-        el('stepPickOne').hidden=true;
-        el('stepFigureOther').hidden=true;
-      }
-    }
-    function showPickOne(a){
-      el('starter').parentElement.hidden=true;
-      el('stepPickOne').hidden=false;
-      el('aEcho').textContent=a;
-      el('aEcho2').textContent=a;
-      drawBar(a);
-      // once one is picked, invite figuring out the other
-      el('stepFigureOther').hidden=false;
-    }
-
-    /***** Event wiring *****/
-    el('check').addEventListener('click', check);
-    el('reset').addEventListener('click', resetSelection);
-    el('next').addEventListener('click', nextQ);
-    window.addEventListener('resize', ()=>{ if(chosen.length) drawBar(chosen[0]); });
-
-    // boot
-    startQuestion();
-  </script>
-</body>
-</html>
+<script>
+/* ------------ helpers ------------- */
+const $ = sel =>
