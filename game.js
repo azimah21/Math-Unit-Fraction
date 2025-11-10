@@ -1,5 +1,30 @@
 // Unit Fraction Addition Game
 
+/* POLISH MODE */
+
+/* Correct gentle glow pulse */
+.correct-glow {
+  animation: correctPulse 0.6s ease-out;
+}
+@keyframes correctPulse {
+  0% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+  50% { box-shadow: 0 0 16px rgba(34,197,94,0.5); }
+  100% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+}
+
+/* Incorrect gentle shake */
+.shake {
+  animation: shakeAnim 0.4s ease;
+}
+@keyframes shakeAnim {
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+
 (() => {
   const choicesGrid = document.getElementById('choicesGrid');
   const targetFractionEl = document.getElementById('targetFraction');
