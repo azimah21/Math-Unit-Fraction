@@ -1,4 +1,3 @@
-// Unit Fraction Addition Game
 (() => {
 
 // ---------- Helpers ----------
@@ -200,3 +199,55 @@ $("resetBtn").onclick = resetSelection;
 newQuestion();
 
 })();
+
+Sent from Outlook for Android
+From: Azimah Ghazali <azimahghazali@hotmail.com>
+Sent: Monday, November 10, 2025 3:12:37 PM
+To: Azimah Ghazali <azimahghazali@hotmail.com>
+Subject: Re: Adaptive Thinking Code 1
+ 
+Song
+
+/* POLISH MODE */
+
+/* Correct gentle glow pulse */
+.correct-glow {
+  animation: correctPulse 0.6s ease-out;
+}
+@keyframes correctPulse {
+  0% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+  50% { box-shadow: 0 0 16px rgba(34,197,94,0.5); }
+  100% { box-shadow: 0 0 0 rgba(34,197,94,0); }
+}
+
+/* Incorrect gentle shake */
+.shake {
+  animation: shakeAnim 0.4s ease;
+}
+@keyframes shakeAnim {
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+Modify game
+
+if(ok){
+  score++;
+  $("cmpVerdict").innerHTML = `🎯 <b>Awesome! Right on target!</b>`;
+  playCorrect();
+
+  $("cmpSum").classList.add("correct-glow");
+  setTimeout(() => $("cmpSum").classList.remove("correct-glow"), 600);
+
+} else {
+  wrong++;
+  $("cmpVerdict").innerHTML =
+    `🙃 <b>Oops!</b> Our sum is <b>${bigger ? "bigger" : "smaller"}</b> than 1/${targetN}. Try adjusting!`;
+  playWrong();
+
+  $("cmpSum").classList.add("shake");
+  setTimeout(() => $("cmpSum").classList.remove("shake"), 450);
+}
