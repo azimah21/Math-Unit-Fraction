@@ -8,13 +8,14 @@
   :root{
     --bg:#f7f9fc; --card:#ffffff; --ink:#0f172a; --muted:#475569;
     --accent:#2563eb; --accent-2:#22c55e; --warn:#ef4444; --soft:#e2e8f0;
+    --glow: 0 0 0 3px rgba(37,99,235,.25);
   }
   *{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
   body{margin:0;background:var(--bg);color:var(--ink)}
   header{padding:20px 16px 6px;max-width:980px;margin:auto}
   h1{margin:0 0 4px;font-size:32px}
   .sub{color:var(--muted)}
-  main{max-width:980px;margin:8px auto 64px;padding:0 16px}
+  main{max-width:980px;margin:8px auto 48px;padding:0 16px}
   .row{display:grid;grid-template-columns:1fr 340px;gap:16px}
   .card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(2,6,23,.06);padding:16px}
   .title{font-weight:700;margin:0 0 10px}
@@ -24,34 +25,40 @@
   .btn{border:0;border-radius:12px;padding:12px 14px;font-weight:700;background:var(--accent);color:white;cursor:pointer}
   .btn.secondary{background:#e5e7eb;color:#111827}
   .btn:disabled{opacity:.5;cursor:not-allowed}
-  .choice{background:#e7eefb;border:2px solid transparent;border-radius:12px;padding:14px 0;text-align:center;font-weight:700;cursor:pointer;transition:transform .06s, box-shadow .06s, border-color .06s}
-  .choice:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(2,6,23,.08)}
-  .choice.selected{border-color:var(--accent);background:#eef5ff;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
-  .choice.disabled{opacity:.45;cursor:not-allowed}
-  .eq{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px}
+  .choice-btn{
+    background:#e7eefb;border:2px solid transparent;border-radius:12px;padding:12px 0;
+    text-align:center;font-weight:800;cursor:pointer;transition:.15s;
+  }
+  .choice-btn:hover{filter:brightness(0.98)}
+  .choice-btn.selected{border-color:var(--accent);background:#eef5ff;box-shadow:var(--glow)}
+  .choice-btn.disabled{opacity:.45;cursor:not-allowed}
+  .eq{font-family:ui-monospace,Consolas,Menlo,monospace;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px}
   .muted{color:var(--muted);font-size:14px}
   .bar{height:16px;border:1px solid #e2e8f0;border-radius:8px;display:flex;overflow:hidden;background:white}
   .bar .seg{flex:1;border-right:1px solid #eef2f7}
   .note{font-size:13px;color:var(--muted);margin-top:6px}
   .ok{color:var(--accent-2);font-weight:700}
   .warn{color:var(--warn);font-weight:700}
-  .cmpRow{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin:12px 0}
+  .cmpRow{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin:10px 0}
   .emoji{font-size:18px;margin-right:6px}
-  /* celebration effects */
-  .cele-wrap{position:relative;padding:18px;border:2px dashed #cbd5e1;border-radius:14px;background:#fff}
-  .sparkle,.confetti,.firework{position:absolute;pointer-events:none;opacity:.9}
-  @keyframes floatUp{0%{transform:translateY(12px);opacity:0}20%{opacity:.9}100%{transform:translateY(-14px);opacity:0}}
-  .sparkle{width:8px;height:8px;background:radial-gradient(circle,#ffd54d,#ff9f1a);border-radius:50%;animation:floatUp 1.2s linear infinite}
-  .confetti{width:6px;height:12px;background:#60a5fa;transform:rotate(15deg);animation:floatUp 1.4s linear infinite}
-  .confetti.alt{background:#f472b6;transform:rotate(-12deg)}
-  .firework{width:2px;height:22px;background:#22c55e;animation:floatUp 1s linear infinite}
+  .center{display:flex;justify-content:center;align-items:center}
+  /* end screen effects (simple CSS “sparkles/confetti/fireworks” placeholders) */
+  .effects{height:120px; position:relative; margin:6px 0 14px}
+  .sparkle,.confetti,.firework{
+    position:absolute; width:6px; height:6px; border-radius:50%;
+    animation: float 2.4s linear infinite;
+  }
+  @keyframes float { 0%{transform:translateY(0)} 100%{transform:translateY(-90px); opacity:0} }
+  .sparkle{background:#ffd54f; left:10%}
+  .confetti{background:#60a5fa; left:50%}
+  .firework{background:#f87171; left:80%}
   #summary{display:none}
 </style>
 </head>
 <body>
 <header>
   <h1>Unit Fraction Builder</h1>
-  <div class="sub">Let’s make this fraction: <b id="headlineTarget">1/8</b>. Pick exactly two <i>different</i> unit fractions to match the target.</div>
+  <div class="sub">Let’s make this fraction: <b id="headlineTarget">1/8</b>. Pick two different unit fractions <b>1/a</b> and <b>1/b</b> whose sum equals the target.</div>
 </header>
 
 <main>
@@ -62,314 +69,388 @@
     <span class="pill">Attempts <span id="attempts">0</span>/5</span>
   </div>
 
-  <div class="row">
+  <div id="gameArea" class="row">
     <!-- LEFT -->
     <section class="card">
       <h2 class="title">Target</h2>
-      <div class="muted" id="targetSentence">Make <b>1/8</b> using two unit fractions.</div>
+      <div class="muted" id="targetSentence">Make <b>1/8</b> using two different unit fractions.</div>
 
       <!-- Live equation -->
       <div class="card" style="margin-top:12px">
         <div class="eq" id="liveEq">1/8 = 1/– + 1/–</div>
-        <div class="muted">Pick two denominators below. The equation will update.</div>
+        <div class="muted">Choose two numbers below. The equation updates as you pick.</div>
       </div>
 
-      <!-- Compare box (simple) -->
+      <!-- Stacked visuals: target, pick1, pick2 -->
+      <div class="card" style="margin-top:12px">
+        <div class="cmpRow"><div class="muted"><b>Target</b></div>
+          <div id="barTarget" class="bar"></div></div>
+        <div class="cmpRow"><div class="muted"><b>Your 1st pick</b></div>
+          <div id="barPick1" class="bar"></div></div>
+        <div class="cmpRow"><div class="muted"><b>Your 2nd pick</b></div>
+          <div id="barPick2" class="bar"></div></div>
+      </div>
+
+      <!-- Compare box -->
       <div id="compareCard" class="card" style="margin-top:12px">
-        <h3 class="title" style="margin-bottom:6px">Feedback</h3>
-        <div class="muted" id="feedback">Pick two numbers, then press <b>Check</b>.</div>
+        <h3 class="title" style="margin-bottom:6px">Compare: Your sum vs Target</h3>
+        <div class="muted">We shade pieces using a common split to compare fairly.</div>
+        <div class="cmpRow"><div class="muted"><b>Target</b></div>
+          <div id="cmpTarget" class="bar"></div></div>
+        <div class="cmpRow"><div class="muted"><b>Your sum</b></div>
+          <div id="cmpSum" class="bar"></div></div>
+        <div class="muted" id="cmpText">Pick two numbers to compare.</div>
+        <div id="cmpVerdict" class="muted" style="margin-top:6px"></div>
       </div>
 
-      <!-- Reveal after 5 wrong -->
-      <div id="revealCard" class="card" style="margin-top:12px;border:1px dashed #cbd5e1; display:none;">
+      <!-- Reveal after 5 attempts if still incorrect -->
+      <div id="revealCard" class="card" style="margin-top:12px; display:none; border:1px dashed #cbd5e1">
         <h3 class="title">Here’s one correct way</h3>
         <div class="eq" id="revealEq">1/8 = 1/5 + 1/20</div>
+        <div class="muted" style="margin-top:6px">Watch how the two unit fractions add up (two colours):</div>
+        <div class="cmpRow"><div class="muted"><b>Target</b></div>
+          <div id="revTarget" class="bar"></div></div>
+        <div class="cmpRow"><div class="muted"><b>Correct sum</b></div>
+          <div id="revSum" class="bar"></div></div>
       </div>
 
       <!-- Choices -->
       <h3 class="title" style="margin-top:14px">Pick exactly two denominators</h3>
-      <div id="choices" class="grid" style="margin-bottom:12px"></div>
+      <div id="choicesGrid" class="grid" style="margin-bottom:12px"></div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:10px">
         <button id="checkBtn" class="btn" disabled>Check Answer</button>
         <button id="resetBtn" class="btn secondary">Reset Selection</button>
         <button id="nextBtn" class="btn secondary" disabled>Next ▸</button>
       </div>
-      <div class="muted" id="helper" style="margin-top:8px">Try, check, and adjust. You’ve got this!</div>
+      <div id="feedback" class="muted" style="margin-top:8px">Pick two denominators, then press Check.</div>
     </section>
 
     <!-- RIGHT -->
     <aside class="card">
-      <h3 class="title">Think-Aloud Tips</h3>
-      <ul class="muted" style="margin:8px 0 0 18px">
-        <li>Unit fractions get smaller when denominators get bigger.</li>
-        <li>If your sum is too big, pick bigger denominators next.</li>
-        <li>If your sum is too small, pick smaller denominators next.</li>
-      </ul>
+      <h3 class="title">Think-Aloud Coach</h3>
+      <div id="coachText" class="muted">
+        Let’s make <b id="coachTarget">1/8</b>.<br/>
+        Tips:
+        <ul style="margin-top:6px">
+          <li>Unit fractions get smaller when denominators get bigger.</li>
+          <li>Try “same-family” numbers first (linked to the target’s denominator), then adjust.</li>
+          <li>If your sum is too big → pick bigger denominators. Too small → pick smaller denominators.</li>
+        </ul>
+      </div>
     </aside>
   </div>
 
-  <!-- Summary -->
-  <section id="summary" class="card" style="margin-top:18px">
-    <h2 class="title">Great effort!</h2>
-    <div class="cele-wrap" id="cele">
-      <div id="finalMsg" class="muted" style="font-size:16px"></div>
-    </div>
-    <div style="margin-top:12px">
-      <button id="playAgainBtn" class="btn">Play Again</button>
+  <!-- SUMMARY -->
+  <section id="summary" class="card center" style="max-width:720px;margin:16px auto 0; text-align:center;">
+    <div>
+      <div class="effects">
+        <div class="sparkle" style="left:12%"></div>
+        <div class="confetti" style="left:48%"></div>
+        <div class="firework" style="left:78%"></div>
+      </div>
+      <h2 id="finalHeadline" class="title">Well done!</h2>
+      <p id="finalScore" class="muted">You scored 8/10.</p>
+      <button id="playAgainBtn" class="btn" style="margin-top:10px">Play again</button>
     </div>
   </section>
 </main>
 
 <script>
-/* ------------------ helpers ------------------ */
-const $ = (id)=>document.getElementById(id);
+(() => {
+  // ---------- DOM
+  const choicesGrid = document.getElementById('choicesGrid');
+  const targetFractionEl = document.getElementById('headlineTarget');
+  const pillTargetEl = document.getElementById('pillTarget');
+  const coachTargetEl = document.getElementById('coachTarget');
+  const barTarget = document.getElementById('barTarget');
+  const barPick1 = document.getElementById('barPick1');
+  const barPick2 = document.getElementById('barPick2');
+  const cmpTarget = document.getElementById('cmpTarget');
+  const cmpSum = document.getElementById('cmpSum');
+  const cmpText = document.getElementById('cmpText');
+  const cmpVerdict = document.getElementById('cmpVerdict');
+  const liveEq = document.getElementById('liveEq');
+  const attemptsEl = document.getElementById('attempts');
+  const qNoEl = document.getElementById('qNo');
+  const scoreEl = document.getElementById('score');
+  const feedback = document.getElementById('feedback');
+  const checkBtn = document.getElementById('checkBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const revealCard = document.getElementById('revealCard');
+  const revealEq = document.getElementById('revealEq');
+  const revTarget = document.getElementById('revTarget');
+  const revSum = document.getElementById('revSum');
+  const gameArea = document.getElementById('gameArea');
+  const summary = document.getElementById('summary');
+  const finalHeadline = document.getElementById('finalHeadline');
+  const finalScoreEl = document.getElementById('finalScore');
+  const playAgainBtn = document.getElementById('playAgainBtn');
 
-function setFeedback(html, cls=""){
-  const el = $("feedback");
-  el.innerHTML = cls ? \`<span class="\${cls}">\${html}</span>\` : html;
-}
+  // ---------- helpers
+  const MIN_DEN = 2, MAX_DEN = 20;
+  const TOTAL_Q = 10;
 
-function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+  const $ = (q) => document.querySelector(q);
+  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+  function lcm(a,b){ const g=(x,y)=>y?g(y,x%y):x; return a/g(a,b)*b; }
+  function lcm3(a,b,c){ return lcm(lcm(a,b),c); }
 
-/* Check 1/a + 1/b = 1/n with integers safely: ab = n(a+b) */
-function isCorrect(n,a,b){ return a*b === n*(a+b); }
-
-/* Find all distinct (a,b) in [2..20], a<b, that solve 1/a + 1/b = 1/n */
-function allPairsFor(n, minD=2, maxD=20){
-  const pairs=[];
-  for(let a=minD;a<=maxD;a++){
-    for(let b=a+1;b<=maxD;b++){
-      if(isCorrect(n,a,b)) pairs.push([a,b]);
+  function drawUnitBar(el, parts, shadeLeft=1, shadeRight=0){
+    el.innerHTML=""; if(!parts) return;
+    const totalShade = Math.min(parts, shadeLeft+shadeRight);
+    for(let i=0;i<parts;i++){
+      const seg=document.createElement('div');
+      seg.className='seg';
+      if(i<shadeLeft){ seg.style.background='rgba(37,99,235,.35)'; }
+      else if(i<totalShade){ seg.style.background='rgba(34,197,94,.35)'; }
+      el.appendChild(seg);
     }
   }
-  return pairs;
-}
 
-/* Choose a target n that has at least one valid pair in [2..20] with a≠b */
-function pickTarget(minN=3,maxN=16){
-  // small range that often yields in-range solutions
-  for(let tries=0; tries<100; tries++){
-    const n = randInt(minN, maxN);
-    const pairs = allPairsFor(n,2,20);
-    if(pairs.length>0) return {n, pairs};
-  }
-  // fallback: deterministic n with known pair (n=8 has 1/5 + 1/20)
-  return {n:8, pairs:[[5,20]]};
-}
+  // ---------- state
+  const state = {
+    qIndex: 1,
+    score: 0,
+    target: 8,
+    choices: [],
+    selection: [],
+    attempts: 0,
+    wrongAttempts: 0,
+    nextEnabled: false,
+    pairSolution: [0,0],
+    gameOver: false,
+  };
 
-/* Build 8 unique choices: include one correct pair + 6 distractors (all 2..20, no duplicates) */
-function buildChoices(correctPair){
-  const used = new Set(correctPair);
-  const choices = new Set(correctPair);
-  while(choices.size<8){
-    const x = randInt(2,20);
-    if(!used.has(x)) choices.add(x), used.add(x);
-  }
-  return shuffle([...choices]);
-}
-
-/* ------------------ state ------------------ */
-const state = {
-  q:1, total:10,
-  score:0,
-  target:8,
-  pairs:[], // all valid pairs for this target (a<b)
-  solution:[5,20], // one chosen solution for reveal
-  choices:[],
-  selection:[],
-  attempts:0,
-  locked:false,
-  nextEnabled:false,
-  finished:false
-};
-
-/* ------------------ rendering ------------------ */
-function renderHUD(){
-  $("qNo").textContent = state.q;
-  $("score").textContent = state.score;
-  $("pillTarget").textContent = \`1/\${state.target}\`;
-  $("headlineTarget").textContent = \`1/\${state.target}\`;
-  $("targetSentence").innerHTML = \`Make <b>1/\${state.target}</b> using two unit fractions.\`;
-  $("liveEq").textContent = \`1/\${state.target} = 1/\${state.selection[0] ?? "–"} + 1/\${state.selection[1] ?? "–"}\`;
-  $("attempts").textContent = state.attempts;
-}
-
-function renderChoices(){
-  const wrap = $("choices");
-  wrap.innerHTML = "";
-  state.choices.forEach(n=>{
-    const btn = document.createElement("button");
-    btn.className = "choice";
-    btn.textContent = n;
-    btn.addEventListener("click", ()=>{
-      if(state.locked) return;
-      // toggle / add up to 2, enforce a≠b
-      const idx = state.selection.indexOf(n);
-      if(idx>=0){
-        state.selection.splice(idx,1);
-      }else{
-        if(state.selection.length===2) return;
-        if(state.selection.length===1 && state.selection[0]===n) return; // prevent a=b
-        state.selection.push(n);
+  // all valid denominators for 1/n within [2..20], a≠b
+  function validDenomsFor(n){
+    const set = new Set();
+    for(let a = n+1; a<=MAX_DEN; a++){
+      const denom = a - n;
+      const num = n * a;
+      if(denom>0 && num % denom === 0){
+        const b = num/denom;
+        if(Number.isInteger(b) && b>=MIN_DEN && b<=MAX_DEN && a!==b){
+          set.add(a); set.add(b);
+        }
       }
-      // update UI
-      document.querySelectorAll(".choice").forEach(b=>{
-        const v = parseInt(b.textContent,10);
-        b.classList.toggle("selected", state.selection.includes(v));
+    }
+    return Array.from(set).sort((x,y)=>x-y);
+  }
+  function allPairsFor(n){
+    const pairs=[];
+    for(let a = n+1; a<=MAX_DEN; a++){
+      const denom = a-n, num = n*a;
+      if(denom>0 && num%denom===0){
+        const b = num/denom;
+        if(Number.isInteger(b) && b>=MIN_DEN && b<=MAX_DEN && a!==b){
+          // de-dup unordered pairs
+          if(!pairs.some(p => (p[0]===b && p[1]===a) || (p[0]===a && p[1]===b))){
+            pairs.push([a,b]);
+          }
+        }
+      }
+    }
+    return pairs;
+  }
+
+  // pick a target n with at least one valid pair (and not requiring identical denoms)
+  const TARGET_POOL = [6,7,8,9,10,11,12,13,14,15,16,18,20];
+  function newTarget(){
+    // try up to 50 times to find n with >=1 pair
+    for(let t=0;t<50;t++){
+      const n = TARGET_POOL[randInt(0, TARGET_POOL.length-1)];
+      if(allPairsFor(n).length>0) return n;
+    }
+    return 8;
+  }
+
+  function buildChoices(n){
+    const pairs = allPairsFor(n);
+    const chosenPair = pairs[randInt(0,pairs.length-1)]; // one correct pair
+    const [a,b] = chosenPair;
+    // candidate pool for distractors = all valid denominators for this n, minus a,b
+    const pool = validDenomsFor(n).filter(x => x!==a && x!==b);
+    const distractors = [];
+    shuffle(pool);
+    for(const d of pool){
+      if(distractors.length>=6) break;
+      distractors.push(d);
+    }
+    // if not enough, fill from 2..20 excluding a,b and current distractors
+    for(let d=MIN_DEN; distractors.length<6 && d<=MAX_DEN; d++){
+      if(d!==a && d!==b && !distractors.includes(d)) distractors.push(d);
+    }
+    const choices = shuffle([a,b,...distractors].slice(0,8));
+    return { choices, solution:[a,b] };
+  }
+
+  function isCorrect(n,a,b){ return a*b === n*(a+b); }
+
+  function resetSelectionUI(){
+    state.selection = [];
+    document.querySelectorAll('.choice-btn').forEach(btn=>btn.classList.remove('selected','disabled'));
+    liveEq.textContent = `1/${state.target} = 1/– + 1/–`;
+    barPick1.innerHTML = ""; barPick2.innerHTML="";
+    cmpTarget.innerHTML=""; cmpSum.innerHTML=""; cmpText.textContent="Pick two numbers to compare."; cmpVerdict.innerHTML="";
+  }
+
+  function renderQuestion(){
+    targetFractionEl.textContent = `1/${state.target}`;
+    pillTargetEl.textContent = `1/${state.target}`;
+    coachTargetEl.textContent = `1/${state.target}`;
+    document.getElementById('targetSentence').innerHTML = `Make <b>1/${state.target}</b> using two different unit fractions.`;
+    document.getElementById('qNo').textContent = state.qIndex;
+    attemptsEl.textContent = state.attempts;
+    scoreEl.textContent = state.score;
+    feedback.textContent = 'Pick two denominators, then press Check.';
+    revealCard.style.display = 'none';
+    nextBtn.disabled = !state.nextEnabled;
+    nextBtn.textContent = (state.qIndex === TOTAL_Q ? 'Finish ▸' : 'Next ▸');
+
+    // draw target bar
+    drawUnitBar(barTarget, state.target, 1, 0);
+
+    // render choices
+    choicesGrid.innerHTML="";
+    state.choices.forEach(den=>{
+      const btn=document.createElement('button');
+      btn.className='choice-btn';
+      btn.textContent=den;
+      btn.addEventListener('click', ()=>{
+        // toggle select; keep at most 2, distinct
+        if(btn.classList.contains('disabled')) return;
+        const val = den;
+        const idx = state.selection.indexOf(val);
+        if(idx>=0){
+          state.selection.splice(idx,1);
+          btn.classList.remove('selected');
+        }else{
+          if(state.selection.length===2) return;
+          if(state.selection.length===1 && state.selection[0]===val) return; // prevent duplicate a=b
+          state.selection.push(val);
+          btn.classList.add('selected');
+        }
+        // update bars + equation + compare
+        const a = state.selection[0] || null;
+        const b = state.selection[1] || null;
+        liveEq.textContent = `1/${state.target} = 1/${a??'–'} + 1/${b??'–'}`;
+        barPick1.innerHTML=""; barPick2.innerHTML="";
+        if(a) drawUnitBar(barPick1, a, 1, 0);
+        if(b) drawUnitBar(barPick2, b, 1, 0);
+        if(a && b){
+          const L = lcm3(a,b,state.target);
+          drawUnitBar(cmpTarget, L, L/state.target, 0);
+          drawUnitBar(cmpSum, L, L/a, L/b);
+          cmpText.textContent = `Common split: ${L}. Your shaded: ${(L/a)+(L/b)}/${L}. Target shaded: ${L/state.target}/${L}.`;
+        }else{
+          cmpTarget.innerHTML=""; cmpSum.innerHTML=""; cmpText.textContent="Pick two numbers to compare."; cmpVerdict.innerHTML="";
+        }
+        checkBtn.disabled = !(a && b);
       });
-      $("checkBtn").disabled = state.selection.length!==2;
-      $("liveEq").textContent = \`1/\${state.target} = 1/\${state.selection[0] ?? "–"} + 1/\${state.selection[1] ?? "–"}\`;
+      choicesGrid.appendChild(btn);
     });
-    wrap.appendChild(btn);
-  });
-}
+    checkBtn.disabled = true;
+  }
 
-function lockChoices(){
-  document.querySelectorAll(".choice").forEach(b=>{
-    b.classList.add("disabled");
-  });
-}
+  function revealOneCorrect(){
+    const [a,b] = state.pairSolution;
+    revealEq.textContent = `1/${state.target} = 1/${a} + 1/${b}`;
+    const L = lcm(a,b);
+    drawUnitBar(revTarget, L, L/state.target, 0);
+    drawUnitBar(revSum, L, L/a, L/b);
+    revealCard.style.display = 'block';
+  }
 
-/* ------------------ flow ------------------ */
-function newQuestion(){
-  state.locked=false;
-  state.nextEnabled=false;
-  state.selection=[];
-  state.attempts=0;
-  $("checkBtn").disabled = true;
-  $("nextBtn").disabled = true;
-  $("revealCard").style.display = "none";
-  setFeedback("Pick two numbers, then press <b>Check</b>.");
-  const picked = pickTarget(3,16);
-  state.target = picked.n;
-  state.pairs = picked.pairs; // all valid in-range, distinct
-  state.solution = shuffle(picked.pairs.slice())[0]; // select one for reveal
-  // choices = 2 from solution + 6 distractors
-  state.choices = buildChoices(state.solution);
-  renderHUD();
-  renderChoices();
-}
+  function checkAnswer(){
+    if(state.selection.length!==2) return;
+    const [a,b] = state.selection;
+    state.attempts++; attemptsEl.textContent = state.attempts;
 
-function encourage(){
-  if(state.attempts===1) return "Great start — keep exploring!";
-  if(state.attempts===2) return "Nice thinking. Check if your sum is too big or too small.";
-  if(state.attempts===3) return "You're getting closer. Try adjusting one number.";
-  if(state.attempts===4) return "Almost there! One smart tweak might do it.";
-  return "Good perseverance! One last try!";
-}
+    const correct = isCorrect(state.target, a, b);
+    const L = lcm3(a,b,state.target);
+    drawUnitBar(cmpTarget, L, L/state.target, 0);
+    drawUnitBar(cmpSum, L, L/a, L/b);
 
-function checkAnswer(){
-  if(state.selection.length!==2 || state.locked) return;
-  state.attempts++;
-  $("attempts").textContent = state.attempts;
-
-  const [a,b] = state.selection.slice().sort((x,y)=>x-y);
-  const correct = isCorrect(state.target,a,b);
-
-  if(correct){
-    state.score++;
-    setFeedback(\`<span class="emoji">🎯</span> <b>Awesome! Right on target!</b> \${state.attempts<=5 ? "You can go to the next question." : ""}\`, "ok");
-    state.locked = true;
-    lockChoices();
-    enableNext();
-  }else{
-    const bigger = (1/a + 1/b) > (1/state.target);
-    setFeedback(
-      \`<span class="emoji">🤔</span><b>Oops! Try again, you can do this!</b>
-       <div class="note">Your sum is <b>\${bigger?"bigger":"smaller"}</b> than 1/\${state.target}. Try \${bigger?"bigger":"smaller"} denominators next.</div>\`,
-      "warn"
-    );
-    if(state.attempts>=5){
-      // reveal one correct pair and unlock next
-      $("revealEq").textContent = \`1/\${state.target} = 1/\${state.solution[0]} + 1/\${state.solution[1]}\`;
-      $("revealCard").style.display = "block";
-      state.locked = true;
-      lockChoices();
-      enableNext();
+    if(correct){
+      state.score++; scoreEl.textContent = state.score;
+      cmpVerdict.innerHTML = `<span class="emoji">🎯</span><b>Awesome! Right on target!</b>`;
+      feedback.innerHTML = `<span class="ok">Great job!</span> You may go next.`;
+      state.nextEnabled = true;
+      nextBtn.disabled = false;
+    }else{
+      state.wrongAttempts++;
+      const bigger = (1/a + 1/b) > (1/state.target);
+      cmpVerdict.innerHTML = `<span class="emoji">🤔</span><b>Oops! Try again, I know you can do it!</b>
+        <div class="note">Our sum is <b>${bigger?'bigger':'smaller'}</b> than 1/${state.target}. Try ${bigger?'bigger':'smaller'} denominators.</div>`;
+      feedback.textContent = `Attempts: ${state.attempts}/5`;
+      if(state.attempts>=5 && !state.nextEnabled){
+        // unlock next + reveal one correct way
+        revealOneCorrect();
+        state.nextEnabled = true;
+        nextBtn.disabled = false;
+      }
     }
   }
 
-  $("helper").textContent = encourage();
-  // allow early next if correct within 5 attempts
-  if(correct && state.attempts<=5) enableNext();
-}
-
-function enableNext(){
-  state.nextEnabled = true;
-  $("nextBtn").disabled = false;
-}
-
-function nextQuestion(){
-  if(!state.nextEnabled) return;
-  if(state.q < state.total){
-    state.q++;
-    newQuestion();
-  }else{
-    showSummary();
+  function startRound(){
+    state.attempts = 0;
+    state.wrongAttempts = 0;
+    state.nextEnabled = false;
+    state.selection = [];
+    state.target = newTarget();
+    const { choices, solution } = buildChoices(state.target);
+    state.choices = choices;
+    state.pairSolution = solution;
+    renderQuestion();
   }
-}
 
-function resetSelection(){
-  if(state.locked) return;
-  state.selection=[];
-  document.querySelectorAll(".choice").forEach(b=>b.classList.remove("selected"));
-  $("checkBtn").disabled = true;
-  $("liveEq").textContent = \`1/\${state.target} = 1/– + 1/–\`;
-  setFeedback("Selection cleared. Pick two denominators, then press <b>Check</b>.");
-}
-
-/* ------------------ summary ------------------ */
-function sprinkle(el, cls, count){
-  const rect = el.getBoundingClientRect();
-  for(let i=0;i<count;i++){
-    const d = document.createElement("div");
-    d.className = cls;
-    d.style.left = Math.random()* (rect.width-20) + "px";
-    d.style.top = Math.random()* (rect.height-20) + "px";
-    d.style.animationDelay = (Math.random()*0.8)+"s";
-    el.appendChild(d);
+  function nextRound(){
+    if(!state.nextEnabled) return;
+    if(state.qIndex < TOTAL_Q){
+      state.qIndex++;
+      startRound();
+    }else{
+      // show summary ONCE at the end
+      showSummary();
+    }
   }
-}
 
-function showSummary(){
-  state.finished = true;
-  const correct = state.score;
-  const final = $("finalMsg");
-  const cele = $("cele");
-  cele.innerHTML = ""; // reset effects wrapper
-
-  if(correct<=4){
-    final.innerHTML = "✨ <b>good try!</b> Keep practising — you’re building great habits.";
-    sprinkle(cele,"sparkle",24);
-  }else if(correct<=7){
-    final.innerHTML = "✨🎉 <b>you did it!</b> Nice progress — your strategies are working.";
-    sprinkle(cele,"sparkle",24);
-    sprinkle(cele,"confetti",20);
-    sprinkle(cele,"confetti alt",16);
-  }else{
-    final.innerHTML = "✨🎉🎆 <b>well done!</b> Superb thinking and persistence!";
-    sprinkle(cele,"sparkle",24);
-    sprinkle(cele,"confetti",20);
-    sprinkle(cele,"confetti alt",16);
-    sprinkle(cele,"firework",14);
+  function showSummary(){
+    state.gameOver = true;
+    gameArea.style.display = 'none';
+    summary.style.display = 'block';
+    const s = state.score;
+    let head = 'Well done!';
+    if(s<=4) head = 'Good try!';
+    else if(s<=7) head = 'You did it!';
+    finalHeadline.textContent = head;
+    finalScoreEl.textContent = `You scored ${s}/${TOTAL_Q}.`;
   }
-  $("summary").style.display = "block";
-  window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});
-}
 
-/* ------------------ wire & boot ------------------ */
-$("checkBtn").addEventListener("click", checkAnswer);
-$("nextBtn").addEventListener("click", nextQuestion);
-$("resetBtn").addEventListener("click", resetSelection);
-$("playAgainBtn").addEventListener("click", ()=>{
-  state.q=1; state.score=0; state.finished=false;
-  $("summary").style.display="none";
-  newQuestion();
-});
+  function playAgain(){
+    // reset everything
+    state.qIndex = 1;
+    state.score = 0;
+    state.gameOver = false;
+    gameArea.style.display = 'grid';
+    summary.style.display = 'none';
+    startRound();
+  }
 
-newQuestion();
+  resetBtn.addEventListener('click', ()=>{
+    if(state.nextEnabled) return; // keep state if already finished question
+    resetSelectionUI();
+  });
+  checkBtn.addEventListener('click', checkAnswer);
+  nextBtn.addEventListener('click', nextRound);
+  playAgainBtn.addEventListener('click', playAgain);
+
+  // boot
+  startRound();
+})();
 </script>
 </body>
 </html>
