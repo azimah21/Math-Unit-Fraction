@@ -240,14 +240,45 @@
     });
     updateHud();
   }
+function startRound() {
+  state.locked = false;
+  if (summary) summary.hidden = true;
+  setFeedback('Pick two denominators, then press Check.');
+
+  const { n, pair, choices } = makeRound();
+  state.target = n;
+  state.solutionPair = pair;
+  state.choices = choices;
+
+  targetFractionEl.textContent = `1/${n}`;
+  renderFractionBar(targetBar, n);
+  resetSelectionUI();
+  nextBtn.hidden = true;
+
+  // render choices...
+  choicesGrid.innerHTML = '';
+  choices.forEach(den => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = den;
+    btn.setAttribute('aria-label', `Choose denominator ${den}`);
+    btn.addEventListener('click', () => onChoice(btn, den));
+    choicesGrid.appendChild(btn);
+  });
+
+  updateHud();
+}
 
   function nextRound() {
-    if (state.setComplete) return;
-    if (state.questionIndex < state.totalQuestions) {
-      state.questionIndex += 1;
-      startRound();
-    } else {
-      showSummary();
+  if (state.setComplete) return;
+  if (state.questionIndex < state.totalQuestions) {
+    state.questionIndex += 1;
+    startRound(); // <- this must be called
+  } else {
+    showSummary();
+  }
+}
+
     }
   }
 
