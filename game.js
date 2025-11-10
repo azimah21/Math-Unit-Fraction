@@ -316,3 +316,18 @@ document.getElementById('adaptiveToggle').addEventListener('change', (e)=>{
   // Initialize
   startRound();
 })();
+
+@@ function correctPairFor(n, within = Array.from({length:20},(_,i)=>i+1)){
+-  for(let i=0;i<within.length;i++){
+-    for(let j=i;j<within.length;j++){
+-      const a=within[i], b=within[j];
+-      if(isCorrect(n,a,b)) return [a,b];
+-    }
+-  }
++  for(let i=0;i<within.length;i++){
++    for(let j=i;j<within.length;j++){
++      const a=within[i], b=within[j];
++      if(a === b) continue; // Ensure a ≠ b
++      if(isCorrect(n,a,b)) return [a,b];
++    }
++  }
