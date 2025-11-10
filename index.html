@@ -1,332 +1,263 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Unit Fraction Builder</title>
-<style>
-  :root{
-    --bg:#f7f9fc; --card:#ffffff; --ink:#0f172a; --muted:#475569;
-    --accent:#2563eb; --accent-2:#22c55e; --warn:#ef4444; --soft:#e2e8f0;
-  }
-  *{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  body{margin:0;background:var(--bg);color:var(--ink)}
-  header{padding:20px 16px 6px;max-width:980px;margin:auto}
-  h1{margin:0 0 4px;font-size:34px}
-  .sub{color:var(--muted)}
-  main{max-width:980px;margin:8px auto;padding:0 16px 60px}
-  .row{display:grid;grid-template-columns:1fr 340px;gap:16px}
-  .card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(2,6,23,.06);padding:16px}
-  .title{font-weight:700;margin:0 0 10px}
-  .pill{display:inline-block;background:#edf2ff;border:1px solid #c7d2fe;border-radius:999px;padding:6px 10px;margin:0 8px 8px 0;font-size:14px}
-  .meta{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap}
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .btn{border:0;border-radius:12px;padding:12px 14px;font-weight:700;background:var(--accent);color:white;cursor:pointer}
-  .btn.secondary{background:#e5e7eb;color:#111827}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .choice{background:#e7eefb;border:2px solid transparent;border-radius:12px;padding:14px 0;text-align:center;font-weight:700;cursor:pointer}
-  .choice.selected{border-color:var(--accent);background:#eef5ff}
-  .choice:disabled{opacity:.4;cursor:not-allowed}
-  .eq{font-family:ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
-      background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px}
-  .muted{color:var(--muted);font-size:14px}
-  .bar{height:16px;border:1px solid #e2e8f0;border-radius:8px;display:flex;overflow:hidden;background:white}
-  .bar .seg{flex:1;border-right:1px solid #eef2f7}
-  .note{font-size:13px;color:var(--muted);margin-top:6px}
-  .ok{color:var(--accent-2);font-weight:700}
-  .no{color:var(--warn);font-weight:700}
-  .hidden{display:none}
-  .coach h3{margin:0 0 8px}
-  .right{display:flex;flex-direction:column;gap:12px}
-  .cmpRow{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin:12px 0}
-  .emoji{font-size:18px;margin-right:6px}
-</style>
-</head>
-<body>
-<header>
-  <h1>Unit Fraction Builder</h1>
-  <div class="sub">Let’s make this fraction: <b id="headlineTarget">1/8</b>. Pick two <i>different</i> </b>unit fractions <b>1/a</b> and <b>1/b</b> whose sum equals the target.</div>
-</header>
+// Unit Fraction Addition Game (clean rebuild)
+// Requires these IDs in index.html:
+// choicesGrid, targetFraction, targetBar, selBar1, selBar2,
+// feedback, questionProgress, score, checkBtn, nextBtn, resetBtn,
+// summary (optional), finalScore (optional), playAgainBtn (optional).
 
-<main>
-  <div class="meta">
-    <span class="pill">Question <span id="qNo">1</span>/10</span>
-    <span class="pill">Score <span id="score">0</span></span>
-    <span class="pill">Target <span id="pillTarget">1/8</span></span>
-    <span class="pill">Attempts <span id="attempts">0</span>/5</span>
-  </div>
+(() => {
+  // -------- DOM --------
+  const $ = id => document.getElementById(id);
+  const choicesGrid = $('choicesGrid');
+  const targetFractionEl = $('targetFraction');
+  const targetBar = $('targetBar');
+  const selBar1 = $('selBar1');
+  const selBar2 = $('selBar2');
+  const feedback = $('feedback');
+  const questionProgressEl = $('questionProgress');
+  const scoreEl = $('score');
+  const checkBtn = $('checkBtn');
+  const nextBtn = $('nextBtn');
+  const resetBtn = $('resetBtn');
+  const summary = $('summary');
+  const finalScoreEl = $('finalScore');
+  const playAgainBtn = $('playAgainBtn');
 
-  <div class="row">
-    <!-- LEFT -->
-    <section class="card">
-      <h2 class="title">Target</h2>
-      <div class="muted" id="targetSentence">Make <b>1/8</b> using two unit fractions.</div>
+  // -------- Config --------
+  const MIN_DEN = 2;
+  const MAX_DEN = 20;
+  const CHOICES_COUNT = 8;
+  const MIN_TARGET = 4; // keep targets that have reasonable pairs in [2..20]
+  const MAX_TARGET = 18;
 
-      <!-- Live equation -->
-      <div class="card" style="margin-top:12px">
-        <div class="eq" id="liveEq">1/8 = 1/– + 1/–</div>
-        <div class="muted">Pick two denominators below. The equation will update.</div>
-      </div>
+  // -------- State --------
+  const state = {
+    q: 1,
+    total: 10,
+    score: 0,
+    attempts: 0,
+    wrong: 0,
+    locked: false,
+    target: 0,
+    solutionPair: [0, 0],
+    choices: [],
+    selection: [], // at most 2, always distinct
+  };
 
-      <!-- Stacked visuals: target, pick1, pick2 -->
-      <div class="card" style="margin-top:12px">
-        <div class="cmpRow"><div class="muted"><b>Visual of the target</b></div>
-          <div id="barTarget" class="bar"></div></div>
-        <div class="cmpRow"><div class="muted"><b>Visual of your 1st pick</b></div>
-          <div id="barPick1" class="bar"></div></div>
-        <div class="cmpRow"><div class="muted"><b>Visual of your 2nd pick</b></div>
-          <div id="barPick2" class="bar"></div></div>
-      </div>
-
-      <!-- Compare box -->
-      <div id="compareCard" class="card" style="margin-top:12px">
-        <h3 class="title" style="margin-bottom:6px">Compare: Your sum vs Target</h3>
-        <div class="muted">We shade pieces using a common split so both bars can be compared fairly.</div>
-        <div class="cmpRow"><div class="muted"><b>Target</b></div>
-          <div id="cmpTarget" class="bar"></div></div>
-        <div class="cmpRow"><div class="muted"><b>Your sum</b></div>
-          <div id="cmpSum" class="bar"></div></div>
-        <div class="muted" id="cmpText">Target shaded pieces: – / –.</div>
-        <div id="cmpVerdict" class="muted" style="margin-top:6px"></div>
-      </div>
-
-      <!-- Reveal after 5 wrong -->
-      <div id="revealCard" class="card hidden" style="margin-top:12px;border:1px dashed #cbd5e1">
-        <h3 class="title">Here’s one correct way</h3>
-        <div class="eq" id="revealEq">1/8 = 1/5 + 1/20</div>
-        <div class="muted" style="margin-top:6px">Watch how the two unit fractions add up (two colours):</div>
-        <div class="cmpRow"><div class="muted"><b>Target</b></div>
-          <div id="revTarget" class="bar"></div></div>
-        <div class="cmpRow"><div class="muted"><b>Correct sum</b></div>
-          <div id="revSum" class="bar"></div></div>
-      </div>
-
-      <!-- Choices -->
-      <h3 class="title" style="margin-top:14px">Pick exactly two denominators</h3>
-      <div id="choices" class="grid" style="margin-bottom:12px"></div>
-
-      <div style="display:flex;gap:10px">
-        <button id="checkBtn" class="btn" disabled>Check Answer</button>
-        <button id="resetBtn" class="btn secondary">Reset Selection</button>
-        <button id="nextBtn" class="btn secondary" disabled>Next ▸</button>
-      </div>
-      <div class="muted" id="helper" style="margin-top:8px">Pick two denominators, then press Check.</div>
-    </section>
-
-    <!-- RIGHT -->
-    <aside class="right">
-      <section class="card coach">
-        <h3 class="title">Think-Aloud Coach</h3>
-        <div id="coachText" class="muted">
-          Let’s make <b id="coachTarget">1/8</b>. Pick one number you think might work. Why that one?
-          <div class="note" style="margin-top:6px">Tip: try “same-family” numbers first (linked to the target), then adjust.</div>
-        </div>
-      </section>
-    </aside>
-  </div>
-</main>
-
-<script>
-/* ---------- helpers ---------- */
-const $ = (id)=>document.getElementById(id);
-function drawUnitBar(el, parts, shadeCountLeft=1, shadeCountRight=0){
-  el.innerHTML = "";
-  const totalShade = Math.min(parts, shadeCountLeft+shadeCountRight);
-  for(let i=0;i<parts;i++){
-    const d=document.createElement("div");
-    d.className="seg";
-    if(i<shadeCountLeft){ d.style.background="rgba(37,99,235,.35)"; }
-    else if(i<totalShade){ d.style.background="rgba(34,197,94,.35)"; }
-    el.appendChild(d);
-  }
-}
-function lcm(a,b){ const g=(x,y)=>y?g(y,x%y):x; return a/g(a,b)*b; }
-
-/* ---------- state ---------- */
-let q=1, score=0;
-let targetN = 8;
-let pick1 = null, pick2 = null;
-let attempts = 0, wrongAttempts = 0;
-let allowNext = false;
-
-/* ---------- target list limited to those with distinct-pair solutions in 1..20 ---------- */
-const IN_RANGE = Array.from({length:19},(_,i)=>i+2); // 2..20
-function hasDistinctPair(n){
-  for(let a=n+1;a<=20;a++){
-    const denom=a-n, num=n*a;
-    if(denom>0 && num%denom===0){
-      const b=num/denom;
-      if(Number.isInteger(b) && b>=2 && b<=20 && a!==b) return true;
+  // -------- Utils --------
+  const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+  const shuffle = arr => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-  }
-  return false;
-}
-const TARGET_POOL = Array.from({length:20},(_,i)=>i+2)
-  .filter(n=>n>=3 && n<=20 && hasDistinctPair(n));
+    return arr;
+  };
+  const lcm = (a, b) => (a * b) / gcd(a, b);
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
 
-/* ---------- question generation ---------- */
-function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-function newQuestion(){
-  targetN = randomFrom(TARGET_POOL);
-  pick1 = pick2 = null;
-  attempts = wrongAttempts = 0;
-  allowNext = false;
-  render();
-  $("coachText").innerHTML =
-   `Let’s make <b>1/${targetN}</b>. Pick one number you think might work. Why that one?
-    <div class="note" style="margin-top:6px">If your sum is too big, your numbers were too small. If too small, your numbers were too big.</div>`;
-}
-
-function render(){
-  $("headlineTarget").textContent = `1/${targetN}`;
-  $("pillTarget").textContent = `1/${targetN}`;
-  $("coachTarget").textContent = `1/${targetN}`;
-  $("targetSentence").innerHTML = `Make <b>1/${targetN}</b> using two unit fractions.`;
-  $("liveEq").textContent = `1/${targetN} = 1/${pick1 ?? "–"} + 1/${pick2 ?? "–"}`;
-  $("attempts").textContent = attempts;
-
-  drawUnitBar($("barTarget"), targetN, 1, 0);
-  $("barPick1").innerHTML = ""; $("barPick2").innerHTML = "";
-  if(pick1){ drawUnitBar($("barPick1"), pick1, 1, 0); }
-  if(pick2){ drawUnitBar($("barPick2"), pick2, 1, 0); }
-
-  // compare (only when both chosen)
-  if(pick1 && pick2){
-    const L = lcm(lcm(pick1,pick2), targetN);
-    const tShade = L/targetN;
-    const s1 = L/pick1, s2 = L/pick2;
-    drawUnitBar($("cmpTarget"), L, tShade, 0);
-    drawUnitBar($("cmpSum"), L, s1, s2);
-    $("cmpText").textContent = `Common split: ${L}. Your shaded pieces: ${s1+s2}/${L}. Target shaded pieces: ${tShade}/${L}.`;
-  }else{
-    $("cmpTarget").innerHTML = ""; $("cmpSum").innerHTML = "";
-    $("cmpText").textContent = "Pick two numbers to compare.";
-    $("cmpVerdict").textContent = "";
+  function setFeedback(html, cls = '') {
+    feedback.innerHTML = cls ? `<span class="${cls}">${html}</span>` : html;
   }
 
-  // choices 1..20 (unique)
-  const nums = Array.from({length:20},(_,i)=>i+1);
-  const choices = $("choices"); choices.innerHTML = "";
-  nums.forEach(n=>{
-    const b=document.createElement("button");
-    b.className="choice";
-    b.textContent=n;
-    if(n===pick1 || n===pick2) b.classList.add("selected");
-    b.onclick=()=>{
-      // prevent choosing the same denominator twice
-      if(pick1===n && !pick2){ pick1 = null; } // toggle off first
-      else if(!pick1){ pick1 = n; }
-      else if(!pick2){
-        if(n===pick1){
-          $("helper").innerHTML = `<span class="no">Denominators must be different.</span>`;
-          return;
-        }
-        pick2 = n;
-      }else{
-        // both filled: allow replacing the second
-        if(n===pick1){
-          $("helper").innerHTML = `<span class="no">Denominators must be different.</span>`;
-          return;
-        }
-        pick2 = n;
+  function renderFractionBar(container, denom) {
+    container.innerHTML = '';
+    if (!denom) return;
+    for (let i = 0; i < denom; i++) {
+      const seg = document.createElement('div');
+      seg.className = 'segment' + (i === 0 ? ' shaded' : '');
+      container.appendChild(seg);
+    }
+    const label = document.createElement('div');
+    label.className = 'fraction-label';
+    label.textContent = `1/${denom}`;
+    container.appendChild(label);
+  }
+
+  // All valid (a,b) with a!=b and a,b within [MIN_DEN..MAX_DEN] for target n
+  function allValidPairsFor(n) {
+    const pairs = [];
+    for (let a = n + 1; a <= MAX_DEN; a++) {
+      const denom = a - n;
+      const num = n * a;
+      if (denom <= 0) continue;
+      if (num % denom !== 0) continue;
+      const b = num / denom;
+      if (!Number.isInteger(b)) continue;
+      if (b < MIN_DEN || b > MAX_DEN) continue;
+      if (a === b) continue; // must be different
+      pairs.push([a, b]);
+    }
+    return pairs;
+  }
+
+  // Build a round: target with at least one valid pair; 8 unique “sensible” choices
+  function makeRound() {
+    for (let tries = 0; tries < 200; tries++) {
+      const n = rand(MIN_TARGET, MAX_TARGET);
+      const pairs = allValidPairsFor(n);
+      if (pairs.length === 0) continue;
+
+      const pair = pairs[rand(0, pairs.length - 1)];
+      const universe = [...new Set(pairs.flat())]; // all denominators that ever appear for this n
+
+      // Start choices with the solution pair, then fill from universe, then pad if needed.
+      const choiceSet = new Set(pair);
+      shuffle(universe).forEach(d => {
+        if (choiceSet.size < CHOICES_COUNT) choiceSet.add(d);
+      });
+      while (choiceSet.size < CHOICES_COUNT) {
+        choiceSet.add(rand(MIN_DEN, MAX_DEN));
       }
-      $("checkBtn").disabled = !(pick1 && pick2);
-      $("liveEq").textContent = `1/${targetN} = 1/${pick1 ?? "–"} + 1/${pick2 ?? "–"}`;
-      render();
-    };
-    choices.appendChild(b);
-  });
-
-  $("checkBtn").disabled = !(pick1 && pick2);
-  $("nextBtn").disabled = !allowNext;
-  $("revealCard").classList.add("hidden");
-}
-
-/* ---------- correctness + attempts ---------- */
-function isCorrect(n,a,b){
-  if(a===b) return false; // enforce distinct denominators
-  return a*b === n*(a+b);
-}
-function encouragement(){
-  if(wrongAttempts===0 && attempts>0) return `<span class="ok">You nailed it!</span> Let’s give you something more challenging! 🔺`;
-  if(wrongAttempts===3) return `<span class="ok">You're on track!</span> Keep going! ➡️`;
-  if(wrongAttempts>3) return `<span class="no">Hang in there!</span> We'll help you out. 🔻`;
-  return `Great effort — adjust and try again!`;
-}
-function decideNextLevel(){ return "easy"; } // (kept simple here; pool already varied)
-
-/* ---------- find a distinct correct pair for reveal (within 1..20) ---------- */
-function correctPairFor(n){
-  for(let a=n+1;a<=20;a++){
-    const denom=a-n, num=n*a;
-    if(denom>0 && num%denom===0){
-      const b=num/denom;
-      if(Number.isInteger(b) && b>=2 && b<=20 && a!==b) return [a,b];
+      const choices = shuffle([...choiceSet]).slice(0, CHOICES_COUNT);
+      return { n, pair, choices };
     }
-  }
-  // fallback constructive (a!=b): choose k|n^2, force distinct by skipping k=n
-  for(let k=1;k<=n*n;k++){
-    if((n*n)%k===0){
-      const a=n+k, b=n+(n*n)/k;
-      if(a!==b) return [a,b];
-    }
-  }
-  return [n+1, n*(n+1)]; // safety (distinct)
-}
-function revealAnswer(){
-  const [a,b] = correctPairFor(targetN);
-  $("revealEq").textContent = `1/${targetN} = 1/${a} + 1/${b}`;
-  const L = lcm(a,b);
-  const tShade = L/targetN;
-  drawUnitBar($("revTarget"), L, tShade, 0);
-  drawUnitBar($("revSum"), L, L/a, L/b);
-  $("revealCard").classList.remove("hidden");
-}
-
-/* ---------- events ---------- */
-$("checkBtn").onclick = ()=>{
-  if(!(pick1 && pick2)) return;
-  attempts++; $("attempts").textContent = attempts;
-
-  if(pick1===pick2){
-    $("cmpVerdict").innerHTML = `<span class="emoji">🚫</span><b>Denominators must be different.</b> Try a new pair.`;
-  }else{
-    const ok = isCorrect(targetN, pick1, pick2);
-    const L = lcm(lcm(pick1, pick2), targetN);
-    drawUnitBar($("cmpTarget"), L, L/targetN, 0);
-    drawUnitBar($("cmpSum"), L, L/pick1, L/pick2);
-
-    if(ok){
-      score++; $("score").textContent = score;
-      $("cmpVerdict").innerHTML = `<span class="emoji">🎯</span><b>Awesome! Right on target!</b> ${encouragement()}`;
-    }else{
-      wrongAttempts++;
-      const bigger = (1/pick1 + 1/pick2) > (1/targetN);
-      $("cmpVerdict").innerHTML =
-        `<span class="emoji">🤔</span><b>Oops! Try again, I know you can do it!</b>
-         <div class="note" style="margin-top:4px">
-         Our sum is <b>${bigger?"bigger":"smaller"}</b> than 1/${targetN}.
-         Next try: use <b>${bigger?"bigger":"smaller"}</b> denominators (${bigger?"that makes each unit fraction smaller":"that makes each unit fraction bigger"}).
-         </div>`;
-      if(wrongAttempts>=5){ revealAnswer(); }
-    }
+    // Extremely unlikely fallback
+    const n = 8;
+    const pair = [5, 20];
+    const choices = shuffle([5, 20, 16, 4, 10, 12, 18, 6]);
+    return { n, pair, choices };
   }
 
-  if(attempts>=5){ allowNext = true; $("nextBtn").disabled = false; }
-  $("helper").innerHTML = `Attempts: <b>${attempts}</b>/5. ${encouragement()}`;
-};
-$("resetBtn").onclick = ()=>{
-  pick1 = pick2 = null; $("cmpVerdict").textContent = ""; render();
-};
-$("nextBtn").onclick = ()=>{
-  q++; $("qNo").textContent = q>10?10:q;
-  newQuestion(decideNextLevel());
-};
+  function updateHUD() {
+    if (questionProgressEl) questionProgressEl.textContent = `Question ${state.q}/${state.total}`;
+    if (scoreEl) scoreEl.textContent = `Score: ${state.score}`;
+  }
 
-/* ---------- boot ---------- */
-newQuestion();
-</script>
-</body>
-</html>
+  function resetSelectionUI() {
+    state.selection = [];
+    selBar1.innerHTML = '';
+    selBar2.innerHTML = '';
+    checkBtn.disabled = true;
+    [...choicesGrid.querySelectorAll('.choice')].forEach(b => b.classList.remove('selected'));
+  }
 
+  function startRound() {
+    state.locked = false;
+    state.attempts = 0;
+    state.wrong = 0;
+    nextBtn.disabled = true;
+
+    const { n, pair, choices } = makeRound();
+    state.target = n;
+    state.solutionPair = pair;
+    state.choices = choices;
+
+    targetFractionEl.textContent = `1/${n}`;
+    renderFractionBar(targetBar, n);
+    resetSelectionUI();
+    setFeedback('Pick two denominators, then press Check.');
+
+    // Render choice buttons
+    choicesGrid.innerHTML = '';
+    choices.forEach(den => {
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.textContent = den;
+      btn.addEventListener('click', () => onChoice(btn, den));
+      choicesGrid.appendChild(btn);
+    });
+
+    updateHUD();
+  }
+
+  function onChoice(btn, denom) {
+    if (state.locked) return;
+    const i = state.selection.indexOf(denom);
+    if (i >= 0) {
+      state.selection.splice(i, 1);
+      btn.classList.remove('selected');
+    } else {
+      if (state.selection.length === 2) return;
+      // prevent picking the same number twice by construction (array holds uniques)
+      state.selection.push(denom);
+      btn.classList.add('selected');
+    }
+    // update bars
+    renderFractionBar(selBar1, state.selection[0] || 0);
+    renderFractionBar(selBar2, state.selection[1] || 0);
+    checkBtn.disabled = state.selection.length !== 2;
+  }
+
+  // Strict unit-fraction equality test with integers; also enforce a≠b
+  function isCorrectPair(a, b, n) {
+    if (a === b) return false;
+    const ab = a * b;
+    const sumNum = a + b; // (a+b)/ab
+    return ab % sumNum === 0 && ab / sumNum === n;
+  }
+
+  function explain(a, b, n) {
+    const ab = a * b, sumNum = a + b;
+    const nCalc = ab % sumNum === 0 ? ab / sumNum : null;
+    const approx = (1 / a + 1 / b).toFixed(3);
+    if (nCalc === n) {
+      return `1/${a} + 1/${b} = (${a}+${b})/(${a}×${b}) = ${sumNum}/${ab} = 1/${n}. 🎯`;
+    }
+    return `1/${a} + 1/${b} = ${sumNum}/${ab}${nCalc ? ` = 1/${nCalc}` : ''} (≈ ${approx}). Target: 1/${n}.`;
+  }
+
+  function checkAnswer() {
+    if (state.selection.length !== 2 || state.locked) return;
+    const [a, b] = state.selection;
+    state.attempts++;
+
+    const ok = isCorrectPair(a, b, state.target);
+    if (ok) {
+      state.score++;
+      setFeedback(explain(a, b, state.target) + ' <b>Awesome! Right on target!</b>', 'ok');
+      state.locked = true;
+      nextBtn.disabled = false; // early advance if correct within 5 tries
+    } else {
+      state.wrong++;
+      setFeedback(explain(a, b, state.target) + ' <b>Oops! Try again, I know you can do it!</b>', 'warn');
+
+      // Unlock next after 5 tries (right or wrong)
+      if (state.attempts >= 5) {
+        nextBtn.disabled = false;
+      }
+    }
+    checkBtn.disabled = true;
+    updateHUD();
+  }
+
+  function nextRound() {
+    if (!nextBtn.disabled) {
+      if (state.q < state.total) {
+        state.q++;
+        startRound();
+      } else {
+        showSummary();
+      }
+    }
+  }
+
+  function showSummary() {
+    setFeedback('');
+    nextBtn.disabled = true;
+    checkBtn.disabled = true;
+    if (finalScoreEl) finalScoreEl.textContent = `You scored ${state.score}/${state.total}.`;
+    if (summary) summary.hidden = false;
+  }
+
+  function startNewSet() {
+    state.q = 1;
+    state.score = 0;
+    if (summary) summary.hidden = true;
+    startRound();
+  }
+
+  function resetSelection() {
+    if (state.locked) return; // keep final view
+    resetSelectionUI();
+    setFeedback('Selection cleared. Pick two denominators, then press Check.');
+  }
+
+  // -------- Wire up --------
+  checkBtn.addEventListener('click', checkAnswer);
+  nextBtn.addEventListener('click', nextRound);
+  resetBtn.addEventListener('click', resetSelection);
+  if (playAgainBtn) playAgainBtn.addEventListener('click', startNewSet);
+
+  // -------- Go --------
+  startRound();
+})();
