@@ -2,338 +2,456 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Unit Fraction Builder</title>
 <style>
   :root{
-    --bg:#f7f9fc; --card:#ffffff; --ink:#0f172a; --muted:#475569;
-    --accent:#2563eb; --accent-2:#22c55e; --warn:#ef4444; --soft:#e2e8f0;
+    --bg:#f6f8fb; --card:#ffffff; --ink:#0f172a; --muted:#64748b;
+    --brand:#2563eb; --brand-weak:#dbeafe; --ok:#16a34a; --warn:#ea580c; --bad:#ef4444;
+    --ring:#c7d2fe;
+    --bar:#e5e7eb; --shade:#bfdbfe; --shade2:#fde68a; --targetShade:#bbf7d0;
   }
-  *{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  body{margin:0;background:var(--bg);color:var(--ink)}
-  header{padding:20px 16px 6px;max-width:980px;margin:auto}
-  h1{margin:0 0 4px;font-size:34px}
-  .sub{color:var(--muted)}
-  main{max-width:980px;margin:8px auto;padding:0 16px 60px}
-  .row{display:grid;grid-template-columns:1fr 340px;gap:16px}
-  .card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(2,6,23,.06);padding:16px}
-  .title{font-weight:700;margin:0 0 10px}
-  .pill{display:inline-block;background:#edf2ff;border:1px solid #c7d2fe;border-radius:999px;padding:6px 10px;margin:0 8px 8px 0;font-size:14px}
-  .meta{display:flex;gap:8px;margin:6px 0 14px}
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .btn{border:0;border-radius:12px;padding:12px 14px;font-weight:700;background:var(--accent);color:white;cursor:pointer}
-  .btn.secondary{background:#e5e7eb;color:#111827}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .choice{background:#e7eefb;border:2px solid transparent;border-radius:12px;padding:14px 0;text-align:center;font-weight:700;cursor:pointer}
-  .choice.selected{border-color:var(--accent);background:#eef5ff}
-  .choice:disabled{opacity:.4;cursor:not-allowed}
-  .eq{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px}
+  *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+  body{margin:0;background:var(--bg);color:var(--ink);}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 16px;}
+  h1{font-size:40px;margin:6px 0 4px;}
+  .lead{color:var(--muted);margin-bottom:18px}
+  .row{display:grid;grid-template-columns:1fr 360px;gap:18px}
+  @media (max-width:980px){.row{grid-template-columns:1fr}}
+  .card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 2px 10px rgba(15,23,42,.06)}
+  .title{font-weight:800;font-size:20px;margin:0 0 10px}
+  .pillbar{display:flex;gap:10px;margin:10px 0 14px}
+  .pill{background:#eef2ff;color:#374151;border-radius:999px;padding:6px 10px;font-size:14px}
+  .grid-btns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .btn{
+    border:1px solid #e5e7eb;border-radius:12px;height:48px;background:#fff;
+    font-weight:700;cursor:pointer;transition:.12s;box-shadow:0 1px 0 rgba(0,0,0,.02)
+  }
+  .btn:hover{border-color:var(--ring);box-shadow:0 0 0 4px rgba(199,210,254,.6)}
+  .btn.sel{outline:3px solid var(--brand-weak);border-color:var(--brand)}
+  .controls{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+  .cta{background:var(--brand);color:#fff;border:none;border-radius:12px;height:48px;padding:0 18px;font-weight:800;cursor:pointer}
+  .ghost{background:#eef2ff;color:#1f2937;border:none;border-radius:12px;height:48px;padding:0 16px;font-weight:700;cursor:pointer}
+  .next{background:#10b981}
+  .cta:disabled,.ghost:disabled{opacity:.45;cursor:not-allowed}
   .muted{color:var(--muted);font-size:14px}
-  .bar{height:16px;border:1px solid #e2e8f0;border-radius:8px;display:flex;overflow:hidden;background:white}
-  .bar .seg{flex:1;border-right:1px solid #eef2f7}
-  .note{font-size:13px;color:var(--muted);margin-top:6px}
-  .ok{color:var(--accent-2);font-weight:700}
-  .no{color:var(--warn);font-weight:700}
-  .hidden{display:none}
-  .coach h3{margin:0 0 8px}
-  .coach ul{margin:8px 0 0 22px;padding:0}
-  .right{display:flex;flex-direction:column;gap:12px}
-  .cmpRow{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin:12px 0}
-  .emoji{font-size:18px;margin-right:6px}
+  .eq{font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;font-size:18px}
+  .vlabel{font-weight:700;margin:6px 0 6px}
+  .bar{height:18px;border:1px solid #d1d5db;border-radius:8px;display:flex;overflow:hidden;background:#fff}
+  .seg{flex:1;border-right:1px solid var(--bar)}
+  .shade{background:var(--shade)}
+  .shade2{background:var(--shade2)}
+  .targetShade{background:var(--targetShade)}
+  .coach h3{margin:0 0 8px;font-size:22px}
+  .coach p{margin:4px 0;color:var(--muted)}
+  .cmp-title{font-weight:900;margin:0 0 8px}
+  .badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 10px;border-radius:999px;font-weight:700}
+  .ok{background:#ecfdf5;color:#065f46}
+  .oops{background:#fff7ed;color:#9a3412}
+  .hl{font-weight:800}
+  .right{color:var(--ok)}
+  .wrong{color:var(--bad)}
 </style>
 </head>
 <body>
-<header>
+<div class="wrap">
   <h1>Unit Fraction Builder</h1>
-  <div class="sub">Let’s make this fraction: <b id="headlineTarget">1/8</b>.
-    Pick two unit fractions <b>1/a</b> and <b>1/b</b> whose sum equals the target.</div>
-</header>
+  <div class="lead">Let’s make this fraction: <span id="hdrTarget" class="hl">1/?</span>. Pick two unit fractions <b>1/a</b> and <b>1/b</b> whose sum equals the target.</div>
 
-<main>
-  <div class="meta">
-    <span class="pill">Question <span id="qNo">1</span>/10</span>
-    <span class="pill">Score <span id="score">0</span></span>
-    <span class="pill">Target <span id="pillTarget">1/8</span></span>
-    <span class="pill">Attempts <span id="attempts">0</span>/5</span>
+  <div class="pillbar">
+    <div class="pill">Question <span id="qNum">1</span>/10</div>
+    <div class="pill">Score <span id="score">0</span></div>
+    <div class="pill">Target <span id="pillTarget">1/?</span></div>
+    <div class="pill">Attempts <span id="attempts">0</span>/5</div>
   </div>
 
   <div class="row">
-    <!-- LEFT -->
-    <section class="card">
-      <h2 class="title">Target</h2>
-      <div class="muted" id="targetSentence">Make <b>1/8</b> using two unit fractions.</div>
+    <!-- LEFT: Game -->
+    <div class="stack">
+      <div class="card">
+        <div class="title">Target</div>
+        <div class="muted">Make <b id="targetText">1/n</b> using two unit fractions.</div>
 
-      <!-- Live equation -->
-      <div class="card" style="margin-top:12px">
-        <div class="eq" id="liveEq">1/8 = 1/– + 1/–</div>
-        <div class="muted">Pick two denominators below. The equation will update.</div>
-      </div>
-
-      <!-- Stacked visuals: target, pick1, pick2 -->
-      <div class="card" style="margin-top:12px">
-        <div class="cmpRow"><div class="muted"><b>Visual of the target</b></div>
-          <div id="barTarget" class="bar"></div></div>
-        <div class="cmpRow"><div class="muted"><b>Visual of your 1st pick</b></div>
-          <div id="barPick1" class="bar"></div></div>
-        <div class="cmpRow"><div class="muted"><b>Visual of your 2nd pick</b></div>
-          <div id="barPick2" class="bar"></div></div>
-      </div>
-
-      <!-- Compare box -->
-      <div id="compareCard" class="card" style="margin-top:12px">
-        <h3 class="title" style="margin-bottom:6px">Compare: Your sum vs Target</h3>
-        <div class="muted">We shade pieces using a common split so both bars can be compared fairly.</div>
-        <div class="cmpRow"><div class="muted"><b>Target</b></div>
-          <div id="cmpTarget" class="bar"></div></div>
-        <div class="cmpRow"><div class="muted"><b>Your sum</b></div>
-          <div id="cmpSum" class="bar"></div></div>
-        <div class="muted" id="cmpText">Target shaded pieces: – / –.</div>
-        <div id="cmpVerdict" class="muted" style="margin-top:6px"></div>
-      </div>
-
-      <!-- Reveal after 5 wrong -->
-      <div id="revealCard" class="card hidden" style="margin-top:12px;border:1px dashed #cbd5e1">
-        <h3 class="title">Here’s one correct way</h3>
-        <div class="eq" id="revealEq">1/8 = 1/5 + 1/20</div>
-        <div class="muted" style="margin-top:6px">Watch how the two unit fractions add up (two colours):</div>
-        <div class="cmpRow"><div class="muted"><b>Target</b></div>
-          <div id="revTarget" class="bar"></div></div>
-        <div class="cmpRow"><div class="muted"><b>Correct sum</b></div>
-          <div id="revSum" class="bar"></div></div>
-      </div>
-
-      <!-- Choices -->
-      <h3 class="title" style="margin-top:14px">Pick exactly two denominators</h3>
-      <div id="choices" class="grid" style="margin-bottom:12px"></div>
-
-      <div style="display:flex;gap:10px">
-        <button id="checkBtn" class="btn" disabled>Check Answer</button>
-        <button id="resetBtn" class="btn secondary">Reset Selection</button>
-        <button id="nextBtn" class="btn secondary" disabled>Next ▸</button>
-      </div>
-      <div class="muted" id="helper" style="margin-top:8px">Pick two denominators, then press Check.</div>
-    </section>
-
-    <!-- RIGHT -->
-    <aside class="right">
-      <section class="card coach">
-        <h3 class="title">Think-Aloud Coach</h3>
-        <div id="coachText" class="muted">
-          Starter check-in:
-          <ul>
-            <li>Is our target a small amount or a big amount?</li>
-            <li>Unit fractions get smaller when denominators get bigger.</li>
-            <li>Quick estimate: will both denominators likely be bigger than the target’s denominator, or around it?</li>
-          </ul>
+        <!-- Equation panel -->
+        <div class="card" style="margin-top:12px">
+          <div class="eq" id="equation">1/n = 1/a + 1/b</div>
+          <div class="muted" style="margin-top:8px">Pick two denominators below. The equation will update.</div>
         </div>
-      </section>
-    </aside>
+
+        <!-- Stacked visuals -->
+        <div class="card" style="margin-top:12px">
+          <div class="vlabel">Visual of the target</div>
+          <div id="barTarget" class="bar"></div>
+          <div class="muted" id="barTargetLab" style="margin-top:6px"></div>
+
+          <div class="vlabel" style="margin-top:12px">Visual of your 1st pick</div>
+          <div id="barA" class="bar"></div>
+          <div class="muted" id="barALab" style="margin-top:6px"></div>
+
+          <div class="vlabel" style="margin-top:12px">Visual of your 2nd pick</div>
+          <div id="barB" class="bar"></div>
+          <div class="muted" id="barBLab" style="margin-top:6px"></div>
+        </div>
+
+        <div class="title" style="margin-top:14px">Pick exactly two denominators</div>
+        <div id="options" class="grid-btns" aria-live="polite"></div>
+
+        <div class="controls">
+          <button id="check" class="cta">Check Answer</button>
+          <button id="reset" class="ghost">Reset Selection</button>
+          <button id="next" class="cta next" disabled>Next ›</button>
+        </div>
+        <div class="muted" id="help">Pick two denominators, then press Check. You must try this question at least 5 times.</div>
+      </div>
+
+      <!-- Compare panel -->
+      <div class="card" id="compareCard" style="margin-top:14px">
+        <div class="cmp-title">Compare: Your sum vs Target</div>
+        <p class="muted">We shade pieces using a common split so both bars can be compared fairly.</p>
+        <div class="vlabel">Your sum <span id="sumLabel" class="muted">(1/a + 1/b)</span></div>
+        <div id="barSum" class="bar"></div>
+        <div class="muted" id="sumLab" style="margin-top:6px"></div>
+
+        <div class="vlabel" style="margin-top:12px">Target <span id="tgtLabel" class="muted">(1/n)</span></div>
+        <div id="barTgtCmp" class="bar"></div>
+        <div class="muted" id="tgtLab" style="margin-top:6px"></div>
+
+        <div id="cmpBadge"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Coach -->
+    <div class="card coach" id="coach">
+      <h3>Think-Aloud Coach</h3>
+      <div id="coachPrompt" class="muted"></div>
+      <div id="coachExtra" class="muted" style="margin-top:10px"></div>
+    </div>
   </div>
-</main>
+</div>
 
 <script>
-/* ---------- helpers ---------- */
-const $ = (id)=>document.getElementById(id);
-function drawUnitBar(el, parts, shadeCountLeft=1, shadeCountRight=0){
-  // Clears and draws a segmented bar; left portion is blue, next (right) portion is green
+(()=>{
+// ---------- helpers ----------
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function gcd(a,b){ while(b){[a,b]=[b,a%b]} return a }
+function lcm(a,b){ return a*b/gcd(a,b) }
+function lcmMany(arr){ return arr.reduce((x,y)=>lcm(x,y)) }
+
+function makeBar(el, parts, shaded, mode){
+  // mode: "target","a","b","sum"
   el.innerHTML = "";
-  const totalShade = Math.min(parts, shadeCountLeft+shadeCountRight);
-  for(let i=0;i<parts;i++){
-    const d=document.createElement("div");
-    d.className="seg";
-    if(i<shadeCountLeft){ d.style.background="rgba(37,99,235,.35)"; }
-    else if(i<totalShade){ d.style.background="rgba(34,197,94,.35)"; }
+  for(let i=1;i<=parts;i++){
+    const d = document.createElement('div');
+    d.className = 'seg';
+    if(i<=shaded){
+      d.classList.add(
+        mode==='target' ? 'targetShade' :
+        mode==='a' ? 'shade' :
+        mode==='b' ? 'shade2' : 'shade'
+      );
+    }
+    if(i===parts) d.style.borderRight='none';
     el.appendChild(d);
   }
 }
 
-function lcm(a,b){ const g=(x,y)=>y?g(y,x%y):x; return a/g(a,b)*b; }
-
-/* ---------- state ---------- */
-let q=1, score=0;
-let targetN = 8;
-let pick1 = null, pick2 = null;
-let attempts = 0, wrongAttempts = 0;
-let allowNext = false;
-
-/* ---------- question generation (difficulty stepper) ---------- */
-const poolEasy = [8,9,10,12]; // target n
-const poolMedium = [6,7,11,13,14];
-const poolHard = [15,16,18,20];
-let level = "easy"; // changes with performance
-
-function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
-function newQuestion(nextLevel=level){
-  level = nextLevel;
-  const source = level==="hard"?poolHard : level==="medium"?poolMedium : poolEasy;
-  targetN = randomFrom(source);
-  pick1 = pick2 = null;
-  attempts = wrongAttempts = 0;
-  allowNext = false;
-  render();
-  // coach
-  $("coachText").innerHTML =
-   `Let’s make <b>1/${targetN}</b>. Pick one number you think might work. Why that one?
-    <div class="note" style="margin-top:6px">Tip: try “same-family” numbers first (linked to ${targetN}), then adjust.</div>`;
+// integer factor pairs for n^2
+function solutionPairs(n){
+  const pairs=[];
+  const nsq = n*n;
+  for(let d=1; d*d<=nsq; d++){
+    if(nsq % d === 0){
+      const e = nsq / d;
+      const a = n + d;
+      const b = n + e;
+      if(a!==b) pairs.push([a,b],[b,a]); // order variants
+    }
+  }
+  // unique pairs with a<b
+  const uniq=[];
+  const seen=new Set();
+  for(const [a,b] of pairs){
+    const x=Math.min(a,b), y=Math.max(a,b);
+    const key=x+"-"+y;
+    if(!seen.has(key)){ seen.add(key); uniq.push([x,y]); }
+  }
+  return uniq;
 }
 
-function render(){
-  $("headlineTarget").textContent = `1/${targetN}`;
-  $("pillTarget").textContent = `1/${targetN}`;
-  $("targetSentence").innerHTML = `Make <b>1/${targetN}</b> using two unit fractions.`;
-  $("liveEq").textContent = `1/${targetN} = 1/${pick1 ?? "–"} + 1/${pick2 ?? "–"}`;
-  $("attempts").textContent = attempts;
+// choose n with a valid pair within [2..20], a!=b
+function pickTarget(level){
+  // level: 1 easy (n 8..12), 2 medium (6..10), 3 hard (4..9)
+  const ranges = {1:[8,12],2:[6,10],3:[4,9]};
+  const [lo,hi]=ranges[level];
+  const candidates=[];
+  for(let n=lo;n<=hi;n++){
+    const pairs = solutionPairs(n).filter(([a,b])=>a<=20 && b<=20);
+    if(pairs.length) candidates.push({n,pairs});
+  }
+  if(!candidates.length) return pickTarget(1);
+  return candidates[Math.floor(Math.random()*candidates.length)];
+}
 
-  // target visual
-  drawUnitBar($("barTarget"), targetN, 1, 0);
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
 
-  // picks visuals
-  $("barPick1").innerHTML = ""; $("barPick2").innerHTML = "";
-  if(pick1){ drawUnitBar($("barPick1"), pick1, 1, 0); }
-  if(pick2){ drawUnitBar($("barPick2"), pick2, 1, 0); }
+// ---------- state ----------
+let q=1, score=0, level=1;
+let n=8, correctPair=[5,20]; // placeholder
+let pickA=null, pickB=null;
+let attempts=0, wrongAttempts=0, locked=false;
 
-  // compare
-  if(pick1 && pick2){
-    const L = lcm(pick1, pick2, targetN);
-    const targetShade = L/targetN;
-    const s1 = L/pick1, s2 = L/pick2;
-    drawUnitBar($("cmpTarget"), L, targetShade, 0);
-    drawUnitBar($("cmpSum"), L, s1, s2);
-    $("cmpText").textContent = `Common split: ${L}. Your shaded pieces: ${s1+s2}/${L}. Target shaded pieces: ${targetShade}/${L}.`;
+// ---------- UI pieces ----------
+const hdrTarget = $('#hdrTarget'), pillTarget = $('#pillTarget'), targetText = $('#targetText');
+const eq = $('#equation'), options = $('#options');
+const barTarget = $('#barTarget'), barA = $('#barA'), barB = $('#barB');
+const barTargetLab = $('#barTargetLab'), barALab = $('#barALab'), barBLab = $('#barBLab');
+const barSum = $('#barSum'), barTgtCmp = $('#barTgtCmp'), sumLab = $('#sumLab'), tgtLab = $('#tgtLab'), cmpBadge = $('#cmpBadge');
+const coachPrompt = $('#coachPrompt'), coachExtra = $('#coachExtra');
+const attemptsEl = $('#attempts'), scoreEl = $('#score'), qEl = $('#qNum');
+const btnCheck = $('#check'), btnReset = $('#reset'), btnNext = $('#next'), help = $('#help'), sumLabel=$('#sumLabel'), tgtLabel=$('#tgtLabel');
+
+// ---------- coach ----------
+const coach = (() => {
+  function start(){
+    coachPrompt.innerHTML = `
+      <p><b>Starter check-in (before you try):</b></p>
+      <ol>
+        <li>Our target is <b>1/${n}</b>. Is this a <i>small</i> amount or a big amount?</li>
+        <li>Unit fractions get <i>smaller</i> when denominators get bigger. So do you expect a “big+small” pair or “small+small”?</li>
+        <li>Quick estimate: will both denominators likely be bigger than ${n} or around it?</li>
+      </ol>
+    `;
+    coachExtra.textContent = "Pick one denominator you think might work. Why that one?";
+  }
+  function firstPick(a){
+    coachPrompt.innerHTML = `<p><b>Nice pick.</b> How will you find the second number?</p>
+    <ul>
+      <li>Try same-family numbers first (near your first pick or linked to the target).</li>
+      <li>If the sum is too big, your numbers were too small. If it’s too small, your numbers were too big.</li>
+    </ul>`;
+    coachExtra.textContent = `You chose 1/${a}. The bar shows 1/a as one shaded piece.`;
+  }
+  function feedback(kind){
+    if(kind==='big'){
+      coachPrompt.innerHTML = `<p class="wrong"><b>Our sum is bigger than 1/${n}.</b></p>
+        <p>Next try: use <b>bigger denominators</b> (that makes each unit fraction smaller).</p>`;
+    }else if(kind==='small'){
+      coachPrompt.innerHTML = `<p class="wrong"><b>Our sum is smaller than 1/${n}.</b></p>
+        <p>Next try: use <b>smaller denominators</b> (that makes each unit fraction larger).</p>`;
+    }else if(kind==='right'){
+      coachPrompt.innerHTML = `<p class="right"><b>Great! Your sum equals 1/${n}.</b></p>
+        <p>What pattern did you notice about denominators that worked?</p>`;
+    }
+  }
+  return {start, firstPick, feedback}
+})();
+
+// ---------- game flow ----------
+function resetSelection(){
+  pickA=null; pickB=null;
+  $$('.btn').forEach(b=>b.classList.remove('sel'));
+  updateEq();
+  drawPickBars();
+  drawCompare();
+}
+
+function updateEq(){
+  const a = pickA? `1/${pickA}`:'1/a';
+  const b = pickB? `1/${pickB}`:'1/b';
+  eq.textContent = `1/${n} = ${a} + ${b}`;
+}
+
+function drawTarget(){
+  makeBar(barTarget, n, 1, 'target');
+  barTargetLab.textContent = `Target 1/${n}. The bar is split into ${n} equal parts; one part is shaded.`;
+}
+function drawPickBars(){
+  // a
+  if(pickA){
+    makeBar(barA, pickA, 1, 'a');
+    barALab.textContent = `You chose 1/${pickA}. The bar is split into ${pickA} equal parts; one part is shaded.`;
+  }else{ barA.innerHTML=''; barALab.textContent=''; }
+  // b
+  if(pickB){
+    makeBar(barB, pickB, 1, 'b');
+    barBLab.textContent = `You chose 1/${pickB}. The bar is split into ${pickB} equal parts; one part is shaded.`;
+  }else{ barB.innerHTML=''; barBLab.textContent=''; }
+}
+
+function drawCompare(){
+  if(!pickA || !pickB){
+    barSum.innerHTML=''; sumLab.textContent='';
+    makeBar(barTgtCmp, n, 1, 'target');
+    tgtLab.textContent = `Target shaded pieces: 1/${n}.`;
+    cmpBadge.innerHTML='';
+    return;
+  }
+  const L = lcmMany([n,pickA,pickB]);
+  const sumPieces = L/pickA + L/pickB;
+  const tgtPieces = L/n;
+  makeBar(barSum, L, sumPieces, 'sum');
+  makeBar(barTgtCmp, L, tgtPieces, 'target');
+  sumLabel.textContent = `(1/${pickA} + 1/${pickB})`;
+  tgtLabel.textContent = `(1/${n})`;
+  sumLab.textContent = `Common split: ${L}; your shaded pieces: ${sumPieces}/${L}.`;
+  tgtLab.textContent = `Target shaded pieces: ${tgtPieces}/${L}.`;
+  if(sumPieces === tgtPieces){
+    cmpBadge.innerHTML = `<div class="badge ok">✅ Awesome! Right on target!</div>`;
   }else{
-    $("cmpTarget").innerHTML = ""; $("cmpSum").innerHTML = "";
-    $("cmpText").textContent = "Pick two numbers to compare.";
-    $("cmpVerdict").textContent = "";
+    cmpBadge.innerHTML = `<div class="badge oops">🙃 Oops! Try again, I know you can do it!</div>`;
   }
+}
 
-  // choices 1..20 (unique)
-  const nums = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
-  const choices = $("choices"); choices.innerHTML = "";
-  nums.forEach(n=>{
-    const b=document.createElement("button");
-    b.className="choice";
-    b.textContent=n;
-    if(n===pick1 || n===pick2) b.classList.add("selected");
-    b.onclick=()=>{
-      if(pick1 && pick2 && !(n===pick1 || n===pick2)) return;
-      if(!pick1 || n===pick1){ pick1 = n; }
-      else if(!pick2 || n===pick2){ pick2 = n; }
-      $("checkBtn").disabled = !(pick1 && pick2);
-      $("liveEq").textContent = `1/${targetN} = 1/${pick1 ?? "–"} + 1/${pick2 ?? "–"}`;
-      render();
+function renderOptions(){
+  options.innerHTML='';
+  // Unique pool 1..20, exclude repeats inside pool
+  const pool = [...Array(20).keys()].slice(1).map(x=>x+1-1); // 2..21? Wait
+}
+</script>
+
+<script>
+// re-open to finish options & flow
+(()=>{
+
+function uniquePool(){
+  // integers 2..20 (unit fractions 1/2..1/20)
+  const arr=[];
+  for(let d=2; d<=20; d++) arr.push(d);
+  return arr;
+}
+
+function renderOptions(){
+  const pool = uniquePool();
+  // Include both members of the correct pair, then fill others with distractors (no duplicates)
+  const need = new Set([correctPair[0], correctPair[1]]);
+  const others = pool.filter(x=>!need.has(x));
+  shuffle(others);
+  const shown = shuffle([ ...need, ...others.slice(0,6) ]); // 8 buttons total
+  options.innerHTML = '';
+  shown.forEach(d =>{
+    const btn = document.createElement('button');
+    btn.className='btn';
+    btn.textContent=d;
+    btn.onclick = ()=>{
+      if(locked) return;
+      // toggle / select up to 2, cannot select same twice
+      if(btn.classList.contains('sel')){
+        btn.classList.remove('sel');
+        if(pickA===d) pickA=null; else if(pickB===d) pickB=null;
+      }else{
+        if(pickA===null){ pickA=d; btn.classList.add('sel'); coach.firstPick(d); }
+        else if(pickB===null && d!==pickA){ pickB=d; btn.classList.add('sel'); }
+        else if(pickB!==null && d!==pickA){ /* already two chosen, ignore */ }
+      }
+      updateEq(); drawPickBars(); drawCompare();
     };
-    choices.appendChild(b);
+    options.appendChild(btn);
   });
-
-  // buttons
-  $("checkBtn").disabled = !(pick1 && pick2);
-  $("nextBtn").disabled = !allowNext;
-
-  // reset reveal
-  $("revealCard").classList.add("hidden");
 }
 
-/* ---------- correctness + attempts ---------- */
-function isCorrect(n,a,b){
-  // integer-safe check: ab == n(a+b)
-  return a*b === n*(a+b);
+function genQuestion(){
+  locked=false;
+  attempts=0; wrongAttempts=0;
+  attemptsEl.textContent = attempts;
+  btnNext.disabled=true;
+  // choose a target based on level and ensure valid pair a!=b within 2..20
+  const pick = pickTarget(level);
+  n = pick.n;
+  // choose one pair randomly
+  const valids = pick.pairs.filter(([a,b])=>a>=2 && b>=2 && a<=20 && b<=20 && a!==b);
+  const [a,b] = valids[Math.floor(Math.random()*valids.length)];
+  correctPair=[a,b]; // a<b guaranteed by solutionPairs
+  // header + panels
+  hdrTarget.textContent = `1/${n}`;
+  pillTarget.textContent = `1/${n}`;
+  targetText.textContent = `1/${n}`;
+  $('#sumLabel').textContent='(1/a + 1/b)';
+  $('#tgtLabel').textContent='(1/n)';
+  $('#cmpBadge').innerHTML='';
+  updateEq();
+  drawTarget(); resetSelection();
+  renderOptions();
+  coach.start();
 }
 
-function encouragement(){
-  if(wrongAttempts===0) return `<span class="ok">You nailed it!</span> Let’s give you something more challenging! 🔺`;
-  if(wrongAttempts===3) return `<span class="ok">You're on track!</span> Keep going! ➡️`;
-  if(wrongAttempts>3) return `<span class="no">Hang in there!</span> We'll help you out. 🔻`;
-  return `Great effort — adjust and try again!`;
-}
+function check(){
+  if(locked) return;
+  if(pickA===null || pickB===null){ help.textContent='Pick two different denominators first (no repeats).'; return; }
+  attempts++; attemptsEl.textContent = attempts;
+  // evaluate
+  const sum = 1/pickA + 1/pickB;
+  const target = 1/n;
+  const eps = 1e-12;
+  const correct = Math.abs(sum - target) < eps;
+  drawCompare();
 
-function decideNextLevel(){
-  if(wrongAttempts===0) return "hard";
-  if(wrongAttempts===3) return level; // same level
-  if(wrongAttempts>3) return "easy";
-  return level;
-}
-
-/* ---------- find a correct pair for reveal ---------- */
-function correctPairFor(n, within = Array.from({length:20},(_,i)=>i+1)){
-  // Prefer a pair from the displayed set 1..20
-  for(let i=0;i<within.length;i++){
-    for(let j=i;j<within.length;j++){
-      const a=within[i], b=within[j];
-      if(isCorrect(n,a,b)) return [a,b];
-    }
-  }
-  // Fallback constructive: (a-n)(b-n)=n^2 -> choose k|n^2
-  for(let k=1;k<=n*n;k++){
-    if((n*n)%k===0){
-      const a=n+k, b=n+(n*n)/k;
-      return [a,b];
-    }
-  }
-  return [n+1,n*(n+1)]; // safety
-}
-
-function revealAnswer(){
-  const [a,b] = correctPairFor(targetN);
-  $("revealEq").textContent = `1/${targetN} = 1/${a} + 1/${b}`;
-  const L = lcm(a,b);
-  const tShade = L/targetN;
-  drawUnitBar($("revTarget"), L, tShade, 0);
-  drawUnitBar($("revSum"), L, L/a, L/b);
-  $("revealCard").classList.remove("hidden");
-}
-
-/* ---------- event wiring ---------- */
-$("checkBtn").onclick = ()=>{
-  if(!(pick1 && pick2)) return;
-  attempts++; $("attempts").textContent = attempts;
-  const ok = isCorrect(targetN, pick1, pick2);
-  if(ok){
-    score++; $("score").textContent = score;
-    const L = lcm(pick1, pick2, targetN);
-    const tShade = L/targetN;
-    drawUnitBar($("cmpTarget"), L, tShade, 0);
-    drawUnitBar($("cmpSum"), L, L/pick1, L/pick2);
-    $("cmpVerdict").innerHTML = `<span class="emoji">🎯</span><b>Awesome! Right on target!</b> ${encouragement()}`;
+  if(correct){
+    score++; scoreEl.textContent=score;
+    coach.feedback('right');
   }else{
     wrongAttempts++;
-    const L = lcm(pick1, pick2, targetN);
-    const tShade = L/targetN;
-    drawUnitBar($("cmpTarget"), L, tShade, 0);
-    drawUnitBar($("cmpSum"), L, L/pick1, L/pick2);
-    const bigger = (1/pick1 + 1/pick2) > (1/targetN);
-    $("cmpVerdict").innerHTML =
-      `<span class="emoji">🤔</span><b>Oops! Try again, I know you can do it!</b>
-       <div class="note" style="margin-top:4px">
-       Our sum is <b>${bigger?"bigger":"smaller"}</b> than 1/${targetN}.
-       Next try: use <b>${bigger?"bigger":"smaller"}</b> denominators (${bigger?"that makes each unit fraction smaller":"that makes each unit fraction bigger"}).
-       </div>`;
-    if(wrongAttempts>=5){ revealAnswer(); }
+    if(sum > target) coach.feedback('big'); else coach.feedback('small');
   }
 
-  // Next unlock rule
-  if(attempts>=5){ allowNext = true; $("nextBtn").disabled = false; }
+  // unlock Next after 5 attempts regardless
+  if(attempts>=5) btnNext.disabled=false;
 
-  // Update helper text
-  $("helper").innerHTML = `Attempts: <b>${attempts}</b>/5. ${encouragement()}`;
-};
+  // if 5 wrong attempts and still not correct -> reveal answer + lock
+  if(!correct && wrongAttempts>=5){
+    revealCorrect();
+    locked=true;
+  }
+}
 
-$("resetBtn").onclick = ()=>{
-  pick1 = pick2 = null;
-  $("cmpVerdict").textContent = "";
-  render();
-};
+function revealCorrect(){
+  const [a,b] = correctPair;
+  // show both correct colours in compare bar
+  const L = lcmMany([n,a,b]);
+  const sumPieces = L/a + L/b;
+  makeBar($('#barSum'), L, sumPieces, 'sum');
+  $('#sumLab').textContent = `Correct: 1/${a} + 1/${b} = 1/${n} (shaded ${sumPieces}/${L}).`;
+  $('#cmpBadge').innerHTML = `<div class="badge ok">🧠 Helper: The correct pair is <b>1/${a}</b> and <b>1/${b}</b>.</div>`;
 
-$("nextBtn").onclick = ()=>{
-  // choose next difficulty per rule; always move on when unlocked
-  const nextLevel = decideNextLevel();
-  q++; $("qNo").textContent = q>10?10:q;
-  newQuestion(nextLevel);
-};
+  // set picks to correct and draw pick bars in two colours
+  pickA=a; pickB=b; updateEq(); drawPickBars(); drawCompare();
+  // visually mark correct options
+  $$('.btn').forEach(bn=>{
+    const d = parseInt(bn.textContent,10);
+    if(d===a || d===b) bn.classList.add('sel'); else bn.classList.remove('sel');
+  });
+}
 
-/* ---------- boot ---------- */
-newQuestion("easy");
+function next(){
+  // choose difficulty change based on wrongAttempts (only when attempts>=5 per requirement)
+  let encouragement='';
+  if(wrongAttempts===0){
+    encouragement = "You nailed it! Let's give you something more challenging!";
+    level = Math.min(3, level+1);
+  }else if(wrongAttempts===3){
+    encouragement = "You're on track! Keep going!";
+    level = level; // similar difficulty
+  }else if(wrongAttempts>3){
+    encouragement = "Hang in there! We'll help you out!";
+    level = Math.max(1, level-1);
+  }else{
+    // any other case keep same level
+    encouragement = "Nice effort! Let's try another one.";
+  }
+  help.textContent = encouragement;
+  q++; qEl.textContent=q;
+  genQuestion();
+}
+
+btnCheck.addEventListener('click', check);
+btnReset.addEventListener('click', ()=>{ if(!locked){ resetSelection(); coach.start(); }});
+btnNext.addEventListener('click', next);
+
+// boot
+genQuestion();
+
+})();
 </script>
 </body>
 </html>
