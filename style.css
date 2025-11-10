@@ -101,6 +101,12 @@ body {
 .choice-btn.correct { border-color: var(--accent); }
 .choice-btn.disabled { opacity: 0.6; cursor: default; }
 
+.choice.selected{
+  border-color: var(--accent);
+  background:#eef5ff;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.20);
+}
+
 .controls {
   display: flex;
   gap: 10px;
